@@ -358,24 +358,41 @@ void DMA2_Stream4_IRQHandler(void)
  * @param data contains the original data, with "samples" many samples
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
-void complete_fft(uint32_t samples, int data[], float result[]){
+float complete_fft(uint32_t samples, float result1[], float result2[]){
 	float Input1[samples * 2];
 	float Input2[samples * 2];
 	float Output1[samples];
 	float Output2[samples];
+	float maxValue;
+	int maxIndex;
 	arm_cfft_radix4_instance_f32 S; /* ARM CFFT module */
-	
-	uint32_t *ADC_samples = get_ADC_samples();
-	for(int i = 0; i < (samples * 2); i += 2){
-		/* Real part, make offset by ADC / 2 */
-		Input1[(uint16_t)i] = (float)ADC_samples[i];
-		/* Imaginary part */
-		Input1[(uint16_t)(i + 1)] = 0;
 
-		Input2[(uint16_t)i] = (float)ADC_samples[i + 1];
-		/* Imaginary part */
-		Input2[(uint16_t)(i + 1)] = 0;
+	//data = ADC_samples[MEAS_input_count*0] / f;
+	for (uint32_t i = 0; i < ADC_NUMS; i++){
+		Input1[(uint16_t)i*2] = (ADC_samples[MEAS_input_count*i]);
+		Input1[(uint16_t)i*2+1] = 0;
 	}
+	/* Draw the  values of input channel 2 (if present) as a curve */
+	if (MEAS_input_count == 2) {
+		for (uint32_t i = 0; i < ADC_NUMS; i++){
+			Input2[(uint16_t)i*2] = (ADC_samples[MEAS_input_count*i+1]);
+			Input2[(uint16_t)i*2+1] = 0;
+		}
+	}
+	//uint32_t *ADC_samples = get_ADC_samples();
+//	for(int i = 0; i < (samples * 2); i += 2){
+//		/* Real part, make offset by ADC / 2 */
+//		Input1[(uint16_t)i] = (float)((ADC_samples[i/2] & 0xffff0000) >> 16);
+//		/* Imaginary part */
+//		Input1[(uint16_t)(i + 1)] = 0;
+//
+//		Input2[(uint16_t)i] = (float)(ADC_samples[i/2] & 0xffff);
+//		/* Imaginary part */
+//		Input2[(uint16_t)(i + 1)] = 0;
+//	}
+	/*
+	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
+	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>
 	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
 	arm_cfft_radix4_init_f32(&S, samples, 0, 1);
 
@@ -387,11 +404,11 @@ void complete_fft(uint32_t samples, int data[], float result[]){
 	arm_cmplx_mag_f32(Input1, Output1, samples);
 	arm_cmplx_mag_f32(Input2, Output2, samples);
 
-	result = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
-
+	result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
+	result2 = Output2;
 	/* Calculates maxValue and returns corresponding value */
-	//arm_max_f32(Output, FFT_SIZE, &maxValue, &maxIndex);
-
+	arm_max_f32(Output1, samples, &maxValue, &maxIndex);
+	return maxValue;
 
 }
 

@@ -38,7 +38,7 @@ void ADC3_IN4_DMA_start(void);
 void ADC1_IN13_ADC2_IN5_dual_init(void);
 void ADC1_IN13_ADC2_IN5_dual_start(void);
 
-void complete_fft(uint32_t samples, int data[], float result[]);
+float complete_fft(uint32_t samples, float result1[], float result2[]);
 
 void MEAS_show_data(void);
 

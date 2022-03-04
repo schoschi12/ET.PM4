@@ -24,6 +24,7 @@
 #include "pushbutton.h"
 #include "menu.h"
 #include "measuring.h"
+#include "speed.h"
 
 
 /******************************************************************************
@@ -105,8 +106,7 @@ int main(void) {
 		case MENU_NONE:					// No transition => do nothing
 			break;
 		case MENU_ZERO:
-			//ADC3_IN4_single_init();
-			//ADC3_IN4_single_read();
+			fft_showcase();
 			break;
 		case MENU_ONE:
 			//ADC3_IN4_timer_init();
