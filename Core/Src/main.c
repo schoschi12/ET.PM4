@@ -105,28 +105,28 @@ int main(void) {
 		case MENU_NONE:					// No transition => do nothing
 			break;
 		case MENU_ZERO:
-			ADC3_IN4_single_init();
-			ADC3_IN4_single_read();
+			//ADC3_IN4_single_init();
+			//ADC3_IN4_single_read();
 			break;
 		case MENU_ONE:
-			ADC3_IN4_timer_init();
-			ADC3_IN4_timer_start();
+			//ADC3_IN4_timer_init();
+			//ADC3_IN4_timer_start();
 			break;
 		case MENU_TWO:
-			ADC3_IN4_DMA_init();
-			ADC3_IN4_DMA_start();
+			//ADC3_IN4_DMA_init();
+			//ADC3_IN4_DMA_start();
 			break;
 		case MENU_THREE:
 			ADC1_IN13_ADC2_IN5_dual_init();
 			ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
-			ADC2_IN13_IN5_scan_init();
-			ADC2_IN13_IN5_scan_start();
+			//ADC2_IN13_IN5_scan_init();
+			//ADC2_IN13_IN5_scan_start();
 			break;
 		case MENU_FIVE:
-			ADC3_IN13_IN4_scan_init();
-			ADC3_IN13_IN4_scan_start();
+			//ADC3_IN13_IN4_scan_init();
+			//ADC3_IN13_IN4_scan_start();
 			break;
 		default:						// Should never occur
 			break;
