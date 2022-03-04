@@ -69,8 +69,8 @@
  * Defines
  *****************************************************************************/
 #define ADC_DAC_RES		12			///< Resolution
-#define ADC_NUMS		1024 //60			///< Number of samples
-#define ADC_FS			16000 //600			///< Sampling freq. => 12 samples for a 50Hz period
+#define ADC_NUMS		256 //60			///< Number of samples
+#define ADC_FS			6000 //600			///< Sampling freq. => 12 samples for a 50Hz period
 #define ADC_CLOCK		84000000	///< APB2 peripheral clock frequency
 #define ADC_CLOCKS_PS	15			///< Clocks/sample: 3 hold + 12 conversion
 #define TIM_CLOCK		84000000	///< APB1 timer clock frequency
@@ -230,12 +230,18 @@ void ADC1_IN13_ADC2_IN5_dual_init(void)
  *****************************************************************************/
 void ADC1_IN13_ADC2_IN5_dual_start(void)
 {
+	DAC_init(); ///////////////////////////////
 	DMA2_Stream4->CR |= DMA_SxCR_EN;	// Enable DMA
 	NVIC_ClearPendingIRQ(DMA2_Stream4_IRQn);	// Clear pending DMA interrupt
 	NVIC_EnableIRQ(DMA2_Stream4_IRQn);	// Enable DMA interrupt in the NVIC
 	ADC1->CR2 |= ADC_CR2_ADON;			// Enable ADC1
 	ADC2->CR2 |= ADC_CR2_ADON;			// Enable ADC2
 	TIM2->CR1 |= TIM_CR1_CEN;			// Enable timer
+	while(MEAS_data_ready == false){
+		DAC_increment();
+		//printf("inc");
+		//HAL_Delay(1);
+	}
 }
 
 /** ***************************************************************************
@@ -359,24 +365,26 @@ void DMA2_Stream4_IRQHandler(void)
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
 float complete_fft(uint32_t samples, float result1[], float result2[]){
-	float Input1[samples * 2];
-	float Input2[samples * 2];
-	float Output1[samples];
-	float Output2[samples];
+	float Input1[samples];
+	float Input2[samples];
+	float middle1[samples];
+	float middle2[samples];
+	//float Output1[samples];
+	//float Output2[samples];
 	float maxValue;
 	int maxIndex;
-	arm_cfft_radix4_instance_f32 S; /* ARM CFFT module */
+	arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
 
 	//data = ADC_samples[MEAS_input_count*0] / f;
-	for (uint32_t i = 0; i < ADC_NUMS; i++){
-		Input1[(uint16_t)i*2] = (ADC_samples[MEAS_input_count*i]);
-		Input1[(uint16_t)i*2+1] = 0;
+	for (uint16_t i = 0; i < ADC_NUMS; i += 2){
+		Input1[i] = (float)(ADC_samples[i*2]);
+		//Input1[i+1] = 0;
 	}
 	/* Draw the  values of input channel 2 (if present) as a curve */
 	if (MEAS_input_count == 2) {
-		for (uint32_t i = 0; i < ADC_NUMS; i++){
-			Input2[(uint16_t)i*2] = (ADC_samples[MEAS_input_count*i+1]);
-			Input2[(uint16_t)i*2+1] = 0;
+		for (uint16_t i = 0; i < ADC_NUMS; i++){
+			Input2[i] = (float)(ADC_samples[i*2+1]);
+			//Input2[i+1] = 0;
 		}
 	}
 	//uint32_t *ADC_samples = get_ADC_samples();
@@ -394,20 +402,20 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
 	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
 	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>
 	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
-	arm_cfft_radix4_init_f32(&S, samples, 0, 1);
+	arm_rfft_fast_init_f32(&S, samples);
 
 	/* Process the data through the CFFT/CIFFT module */
-	arm_cfft_radix4_f32(&S, Input1);
-	arm_cfft_radix4_f32(&S, Input2);
+	arm_rfft_fast_f32(&S, Input1, middle1, 0);
+	arm_rfft_fast_f32(&S, Input2, middle2, 0);
 
 	/* Process the data through the Complex Magnitude Module for calculating the magnitude at each bin */
-	arm_cmplx_mag_f32(Input1, Output1, samples);
-	arm_cmplx_mag_f32(Input2, Output2, samples);
+	arm_cmplx_mag_f32(middle1, result1, samples);
+	arm_cmplx_mag_f32(middle2, result2, samples);
 
-	result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
-	result2 = Output2;
+	//result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
+	//result2 = Output2;
 	/* Calculates maxValue and returns corresponding value */
-	arm_max_f32(Output1, samples, &maxValue, &maxIndex);
+	arm_max_f32(result2, samples, &maxValue, &maxIndex);
 	return maxValue;
 
 }

@@ -176,6 +176,7 @@ void MENU_check_transition(void)
 	TS_State.Y = BSP_LCD_GetYSize() - TS_State.Y;	// Invert the y-axis
 #endif
 	if (TS_State.TouchDetected) {		// If a touch was detected
+		BSP_LED_On(LED4);
 		/* Do only if last transition not pending anymore */
 		if (MENU_NONE == MENU_transition) {
 			item_old = item_new;		// Store old item
@@ -192,6 +193,8 @@ void MENU_check_transition(void)
 				}
 			}
 		}
+	}else{
+		BSP_LED_Off(LED4);
 	}
 }
 
