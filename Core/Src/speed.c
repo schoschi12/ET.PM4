@@ -50,16 +50,36 @@ void fft_showcase(){
 	float fft1[SAMPLES];
 	float fft2[SAMPLES];
 	printf("test");
-	DAC_init();
+	//DAC_init();
 	ADC1_IN13_ADC2_IN5_dual_init();
 	ADC1_IN13_ADC2_IN5_dual_start();
+	while(MEAS_data_ready == false);
+	/*
 	while(MEAS_data_ready == false){
 		DAC_increment();
 		printf("inc");
 		HAL_Delay(10);
-	}
+	}*/
 	MEAS_data_ready = false;
 	maxValue = complete_fft(SAMPLES, fft1, fft2);
+	double test = 0;
+	int index;
+	for (int i = 1; i < SAMPLES / 2; i++){
+		if((double)fft1[i] > test){
+			test = (double)fft1[i];
+			index = i;
+		}
+	}
+
+	char text[16];
+
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	BSP_LCD_SetFont(&Font24);
+	double freq = (double)index * 24000.0/256.0;
+	snprintf(text, 15, "Freq %4dHz", (int)freq);
+	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
+	HAL_Delay(500);
 
 	const uint32_t Y_OFFSET = 260;
 	const uint32_t X_SIZE = 240;
@@ -68,6 +88,6 @@ void fft_showcase(){
 	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET+1);
 	for (int i = 0; i < (SAMPLES / 2); i++) {
 	    /* Draw FFT results */
-		DrawBar(30 + 2 * i, 220, 120, (uint16_t)maxValue, (float)fft2[(uint16_t)i], 0x1234, 0xFFFF);
+		//DrawBar(30 + 2 * i, 220, 120, (uint16_t)maxValue, (float)fft2[(uint16_t)i], 0x1234, 0xFFFF);
 	}
 }

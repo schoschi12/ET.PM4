@@ -70,7 +70,7 @@
  *****************************************************************************/
 #define ADC_DAC_RES		12			///< Resolution
 #define ADC_NUMS		256 //60			///< Number of samples
-#define ADC_FS			6000 //600			///< Sampling freq. => 12 samples for a 50Hz period
+#define ADC_FS			24000 //600			///< Sampling freq. => 12 samples for a 50Hz period
 #define ADC_CLOCK		84000000	///< APB2 peripheral clock frequency
 #define ADC_CLOCKS_PS	15			///< Clocks/sample: 3 hold + 12 conversion
 #define TIM_CLOCK		84000000	///< APB1 timer clock frequency
@@ -92,7 +92,7 @@ static uint32_t DAC_sample = 0;			///< DAC output value
 
 /******************************************************************************
  * Functions
- *****************************************************************************/
+ *******************************************************************f**********/
 
 
 /** ***************************************************************************
@@ -376,7 +376,7 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
 	arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
 
 	//data = ADC_samples[MEAS_input_count*0] / f;
-	for (uint16_t i = 0; i < ADC_NUMS; i += 2){
+	for (uint16_t i = 0; i < ADC_NUMS; i++){
 		Input1[i] = (float)(ADC_samples[i*2]);
 		//Input1[i+1] = 0;
 	}

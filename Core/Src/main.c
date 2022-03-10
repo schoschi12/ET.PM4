@@ -106,7 +106,9 @@ int main(void) {
 		case MENU_NONE:					// No transition => do nothing
 			break;
 		case MENU_ZERO:
-			fft_showcase();
+			while(true){
+				fft_showcase();
+			}
 			break;
 		case MENU_ONE:
 			//ADC3_IN4_timer_init();
