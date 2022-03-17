@@ -30,6 +30,7 @@
 /******************************************************************************
  * Functions
  *****************************************************************************/
+/*
 void DrawBar(uint16_t bottomX, uint16_t bottomY, uint16_t maxHeight, uint16_t maxValue, float value, uint16_t foreground, uint16_t background) {
     uint16_t height;
     height = (uint16_t)((float)value / (float)maxValue * (float)maxHeight);
@@ -42,7 +43,7 @@ void DrawBar(uint16_t bottomX, uint16_t bottomY, uint16_t maxHeight, uint16_t ma
     	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
     	BSP_LCD_DrawLine(bottomX, bottomY - height, bottomX, bottomY - maxHeight);
     }
-}
+}*/
 
 void fft_showcase(){
 	float maxValue;
@@ -76,7 +77,7 @@ void fft_showcase(){
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	BSP_LCD_SetFont(&Font24);
-	double freq = (double)index * 24000.0/256.0;
+	double freq = (double)index * (double)ADC_FS/(double)ADC_NUMS;
 	snprintf(text, 15, "Freq %4dHz", (int)freq);
 	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
 	HAL_Delay(500);
