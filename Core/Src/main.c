@@ -77,7 +77,7 @@ int main(void) {
 	gyro_disable();						// Disable gyro, use those analog inputs
 
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
-	MEAS_timer_init();					// Configure the timer
+	MEAS_timer_init(24000);					// Configure the timer
 
 	/* Infinite while loop */
 	while (1) {							// Infinitely loop in main function
@@ -111,6 +111,11 @@ int main(void) {
 			}
 			break;
 		case MENU_ONE:
+			init_speed();
+			while(true){
+				measure_speed();
+				HAL_Delay(500);
+			}
 			//ADC3_IN4_timer_init();
 			//ADC3_IN4_timer_start();
 			break;

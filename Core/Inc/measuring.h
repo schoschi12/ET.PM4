@@ -24,14 +24,14 @@ extern bool MEAS_data_ready;
 extern bool DAC_active;
 
 #define ADC_NUMS		256 //60			///< Number of samples
-#define ADC_FS			24000 //600			///< Sampling freq. => 12 samples for a 50Hz period
+//#define ADC_FS			24000 //600			///< Sampling freq. => 12 samples for a 50Hz period
 
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 void MEAS_GPIO_analog_init(void);
-void MEAS_timer_init(void);
+void MEAS_timer_init(int adc_fs);
 void DAC_reset(void);
 void DAC_init(void);
 void DAC_increment(void);

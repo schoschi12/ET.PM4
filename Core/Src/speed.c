@@ -16,12 +16,12 @@
 #include "speed.h"
 #include "measuring.h"
 #include "stm32f429i_discovery_lcd.h"
-//#include "tm_stm32f4_ili9341_ltdc.h"
 
 /******************************************************************************
  * Defines
  *****************************************************************************/
 #define SAMPLES			256
+#define SAMPLING_RATE	16000		///<Sampling rate of ADC
 
 /******************************************************************************
  * Variables
@@ -44,6 +44,42 @@ void DrawBar(uint16_t bottomX, uint16_t bottomY, uint16_t maxHeight, uint16_t ma
     	BSP_LCD_DrawLine(bottomX, bottomY - height, bottomX, bottomY - maxHeight);
     }
 }*/
+
+void init_speed(void){
+	MEAS_timer_init(SAMPLING_RATE);
+}
+
+float measure_speed(void){
+	float maxValue;
+	float fft1[SAMPLES];
+	float fft2[SAMPLES];
+	ADC1_IN13_ADC2_IN5_dual_init();
+	ADC1_IN13_ADC2_IN5_dual_start();
+	while(MEAS_data_ready == false);
+	MEAS_data_ready = false;
+	maxValue = complete_fft(SAMPLES, fft1, fft2);
+	double test = 0;
+	int index;
+	for (int i = 1; i < SAMPLES / 2; i++){
+		if((double)fft1[i] > test){
+			test = (double)fft1[i];
+			index = i;
+		}
+	}
+
+	char text[16];
+
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	BSP_LCD_SetFont(&Font24);
+	double freq = (double)index * SAMPLING_RATE/(double)ADC_NUMS;
+	double speed = freq/158;
+	snprintf(text, 15, "Freq %4dHz", (int)freq);
+	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
+	snprintf(text, 15, "Speed %4dmm/s", (int)(speed * 1000));
+	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
+	return speed;
+}
 
 void fft_showcase(){
 	float maxValue;
@@ -77,8 +113,10 @@ void fft_showcase(){
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	BSP_LCD_SetFont(&Font24);
-	double freq = (double)index * (double)ADC_FS/(double)ADC_NUMS;
+	double freq = (double)index * 24000/(double)ADC_NUMS;
 	snprintf(text, 15, "Freq %4dHz", (int)freq);
+	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
+	snprintf(text, 15, "Speed %4dmm/s", (int)(freq/158*1000));
 	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
 	HAL_Delay(500);
 

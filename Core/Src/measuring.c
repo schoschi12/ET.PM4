@@ -168,10 +168,12 @@ void ADC_reset(void) {
  *
  * @note For debugging purposes the timer interrupt might be useful.
  *****************************************************************************/
-void MEAS_timer_init(void)
+void MEAS_timer_init(int adc_fs)
 {
+
+	int tim_prescale = (TIM_CLOCK/adc_fs/(TIM_TOP+1)-1); ///< Clock prescaler
 	__HAL_RCC_TIM2_CLK_ENABLE();		// Enable Clock for TIM2
-	TIM2->PSC = TIM_PRESCALE;			// Prescaler for clock freq. = 1MHz
+	TIM2->PSC = tim_prescale;			// Prescaler for clock freq. = 1MHz
 	TIM2->ARR = TIM_TOP;				// Auto reload = counter top value
 	TIM2->CR2 |= TIM_CR2_MMS_1; 		// TRGO on update
 	/* If timer interrupt is not needed, comment the following lines */

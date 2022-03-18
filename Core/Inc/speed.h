@@ -21,3 +21,5 @@
  * Functions
  *****************************************************************************/
 void fft_showcase();
+void init_speed(void);
+float measure_speed(void);

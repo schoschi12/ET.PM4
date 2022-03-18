@@ -22,6 +22,10 @@
  * Defines
  *****************************************************************************/
 #define SAMPLES			256
+#define B_SWEEP			260000		///<Bandwidth of VCO frequencyy
+#define LIGHTSPEED		299792458
+#define T_SWEEP			2			///<Period of frquency sweep in ms!
+#define SAMPLING_RATE	512000		///<Sampling rate of ADC
 
 /******************************************************************************
  * Variables
@@ -30,4 +34,10 @@
 /******************************************************************************
  * Functions
  *****************************************************************************/
+void init_range(void){
+	MEAS_timer_init(SAMPLING_RATE);
+}
 
+float measure_range(void){
+
+}
