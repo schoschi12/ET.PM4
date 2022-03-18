@@ -19,6 +19,7 @@
 #include "stm32f429i_discovery.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "stm32f429i_discovery_ts.h"
+#include "stdbool.h"
 
 #include "main.h"
 #include "pushbutton.h"
@@ -113,15 +114,17 @@ int main(void) {
 		case MENU_ONE:
 			init_speed();
 			while(true){
-				measure_speed();
+				measure_speed(false);
 				HAL_Delay(500);
 			}
 			//ADC3_IN4_timer_init();
 			//ADC3_IN4_timer_start();
 			break;
 		case MENU_TWO:
-			//ADC3_IN4_DMA_init();
-			//ADC3_IN4_DMA_start();
+			init_speed();
+			while(true){
+				measure_speed(true);
+			}
 			break;
 		case MENU_THREE:
 			ADC1_IN13_ADC2_IN5_dual_init();

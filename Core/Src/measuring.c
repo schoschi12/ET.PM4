@@ -408,7 +408,7 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
 	arm_rfft_fast_f32(&S, Input1, middle1, 0);
 	arm_rfft_fast_f32(&S, Input2, middle2, 0);
 
-	/* Process the data through the Complex Magnitude Module for calculating the magnitude at each bin */
+	/* Process the data through the Complex Magnitud-e Module for calculating the magnitude at each bin */
 	arm_cmplx_mag_f32(middle1, result1, samples);
 	arm_cmplx_mag_f32(middle2, result2, samples);
 
