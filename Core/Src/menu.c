@@ -45,9 +45,9 @@
  *****************************************************************************/
 static MENU_item_t MENU_transition = MENU_NONE;	///< Transition to this menu
 static MENU_entry_t MENU_entry[MENU_ENTRY_COUNT] = {
-		{"sin-",	"gle",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTBLUE},
-		{"Timer",	"+IRQ",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTGREEN},
-		{"DMA",	    "+IRQ",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTRED},
+		{"FFT",		"show",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTBLUE},
+		{"speed",	"+meas",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTGREEN},
+		{"human",	"detect",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTRED},
 		{"DMA",	    "dual",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTCYAN},
 		{"DMA",	    "scan",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTMAGENTA},
 		{"DMA",	    "scan_",	LCD_COLOR_BLACK,	LCD_COLOR_LIGHTYELLOW}
