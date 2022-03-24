@@ -26,6 +26,7 @@
 #include "menu.h"
 #include "measuring.h"
 #include "speed.h"
+#include "range.h"
 
 
 /******************************************************************************
@@ -131,8 +132,8 @@ int main(void) {
 			ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
-			//ADC2_IN13_IN5_scan_init();
-			//ADC2_IN13_IN5_scan_start();
+			DAC_init();
+			DAC_sawtooth();
 			break;
 		case MENU_FIVE:
 			//ADC3_IN13_IN4_scan_init();

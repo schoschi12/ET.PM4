@@ -21,4 +21,5 @@
  * Functions
  *****************************************************************************/
 void init_range(void);
+void DAC_sawtooth(void);
 float measure_range(void);

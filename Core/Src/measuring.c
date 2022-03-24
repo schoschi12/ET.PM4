@@ -241,7 +241,7 @@ void ADC1_IN13_ADC2_IN5_dual_start(void)
 	ADC2->CR2 |= ADC_CR2_ADON;			// Enable ADC2
 	TIM2->CR1 |= TIM_CR1_CEN;			// Enable timer
 	while(MEAS_data_ready == false){
-		DAC_increment();
+		//DAC_increment();
 		//printf("inc");
 		//HAL_Delay(1);
 	}
