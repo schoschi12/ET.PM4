@@ -197,6 +197,9 @@ void MEAS_timer_init(int adc_fs)
  * @n The input used with ADC1 is ADC123_IN13 = GPIO PC3
  * @n The input used with ADC2 is ADC12_IN5 = GPIO PA5
  *****************************************************************************/
+
+
+//Zu ändern: auf PC1 statt PA5 und PC3
 void ADC1_IN13_ADC2_IN5_dual_init(void)
 {
 	MEAS_input_count = 2;				// Only 1 input is converted
