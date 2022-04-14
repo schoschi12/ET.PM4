@@ -74,7 +74,8 @@
 #define TIM_CLOCK		84000000	///< APB1 timer clock frequency
 #define TIM_TOP			9			///< Timer top value
 #define TIM_PRESCALE	(TIM_CLOCK/ADC_FS/(TIM_TOP+1)-1) ///< Clock prescaler
-
+#define IFFT_FLAG 0
+#define BIT_REVERSE_FLAG 1
 
 /******************************************************************************
  * Variables
@@ -110,6 +111,7 @@ void MEAS_GPIO_analog_init(void)
 	GPIOC->MODER |= (GPIO_MODER_MODER3_Msk);// Analog mode for PC3 = ADC123_IN13
 	__HAL_RCC_GPIOA_CLK_ENABLE();		// Enable Clock for GPIO port A
 	GPIOA->MODER |= (GPIO_MODER_MODER5_Msk);// Analog mode for PA5 ADC12_IN5
+	GPIOA->MODER |= (GPIO_MODER_MODER6_Msk);// Analog mode for PA5 ADC12_IN5
 }
 
 
@@ -210,7 +212,7 @@ void ADC1_IN13_ADC2_IN5_dual_init(void)
 	ADC1->CR2 |= (1UL << ADC_CR2_EXTEN_Pos);	// En. ext. trigger on rising e.
 	ADC1->CR2 |= (6UL << ADC_CR2_EXTSEL_Pos);	// Timer 2 TRGO event
 	ADC1->SQR3 |= (13UL << ADC_SQR3_SQ1_Pos);	// Input 13 = first conversion
-	ADC2->SQR3 |= (5UL << ADC_SQR3_SQ1_Pos);	// Input 5 = first conversion
+	ADC2->SQR3 |= (11UL << ADC_SQR3_SQ1_Pos);	// Input 5 = first conversion
 	__HAL_RCC_DMA2_CLK_ENABLE();		// Enable Clock for DMA2
 	DMA2_Stream4->CR &= ~DMA_SxCR_EN;	// Disable the DMA stream 4
 	while (DMA2_Stream4->CR & DMA_SxCR_EN) { ; }	// Wait for DMA to finish
@@ -233,7 +235,7 @@ void ADC1_IN13_ADC2_IN5_dual_init(void)
  *****************************************************************************/
 void ADC1_IN13_ADC2_IN5_dual_start(void)
 {
-	DAC_init(); ///////////////////////////////
+	//DAC_init(); ///////////////////////////////
 	DMA2_Stream4->CR |= DMA_SxCR_EN;	// Enable DMA
 	NVIC_ClearPendingIRQ(DMA2_Stream4_IRQn);	// Clear pending DMA interrupt
 	NVIC_EnableIRQ(DMA2_Stream4_IRQn);	// Enable DMA interrupt in the NVIC
@@ -372,24 +374,37 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
 	float Input2[samples];
 	float middle1[samples];
 	float middle2[samples];
-	//float Output1[samples];
+	float Output[samples];
 	//float Output2[samples];
 	float maxValue;
 	int maxIndex;
-	arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
+	//arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
+	arm_cfft_instance_f32 complexInst; /* ARM CFFT module */
+	//arm_cfft_init_f32(&complexInst, samples);
+
+	float InputComplex[samples * 2];
+	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++){
+		InputComplex[i] = (float)(ADC_samples[i]);
+	}
+
+	arm_cfft_f32(&complexInst, InputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
+	arm_cmplx_mag_f32(InputComplex, Output, samples);
 
 	//data = ADC_samples[MEAS_input_count*0] / f;
+	/*
 	for (uint16_t i = 0; i < ADC_NUMS; i++){
 		Input1[i] = (float)(ADC_samples[i*2]);
 		//Input1[i+1] = 0;
 	}
+	*/
 	/* Draw the  values of input channel 2 (if present) as a curve */
+	/*
 	if (MEAS_input_count == 2) {
 		for (uint16_t i = 0; i < ADC_NUMS; i++){
 			Input2[i] = (float)(ADC_samples[i*2+1]);
 			//Input2[i+1] = 0;
 		}
-	}
+	}*/
 	//uint32_t *ADC_samples = get_ADC_samples();
 //	for(int i = 0; i < (samples * 2); i += 2){
 //		/* Real part, make offset by ADC / 2 */
@@ -405,20 +420,20 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
 	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
 	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>
 	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
-	arm_rfft_fast_init_f32(&S, samples);
+	//arm_rfft_fast_init_f32(&S, samples);
 
 	/* Process the data through the CFFT/CIFFT module */
-	arm_rfft_fast_f32(&S, Input1, middle1, 0);
-	arm_rfft_fast_f32(&S, Input2, middle2, 0);
+	//arm_rfft_fast_f32(&S, Input1, middle1, 0);
+	//arm_rfft_fast_f32(&S, Input2, middle2, 0);
 
 	/* Process the data through the Complex Magnitud-e Module for calculating the magnitude at each bin */
-	arm_cmplx_mag_f32(middle1, result1, samples);
-	arm_cmplx_mag_f32(middle2, result2, samples);
+	//arm_cmplx_mag_f32(middle1, result1, samples);
+	//arm_cmplx_mag_f32(middle2, result2, samples);
 
 	//result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
 	//result2 = Output2;
 	/* Calculates maxValue and returns corresponding value */
-	arm_max_f32(result2, samples, &maxValue, &maxIndex);
+	//arm_max_f32(result2, samples, &maxValue, &maxIndex);
 	return maxValue;
 
 }

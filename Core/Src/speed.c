@@ -92,6 +92,7 @@ void fft_showcase() {
 	float fft2[ADC_NUMS];
 	printf("test");
 	//DAC_init();
+	//ADC1_IN13_ADC2_IN5_dual_init();
 	ADC1_IN13_ADC2_IN5_dual_init();
 	ADC1_IN13_ADC2_IN5_dual_start();
 	while (MEAS_data_ready == false)

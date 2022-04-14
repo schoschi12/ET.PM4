@@ -11,7 +11,6 @@
  * @date	17.06.2021
  *****************************************************************************/
 
-
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -28,23 +27,19 @@
 #include "speed.h"
 #include "range.h"
 
-
 /******************************************************************************
  * Defines
  *****************************************************************************/
 
-
 /******************************************************************************
  * Variables
  *****************************************************************************/
-
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 static void SystemClock_Config(void);	///< System Clock Configuration
 static void gyro_disable(void);			///< Disable the onboard gyroscope
-
 
 /** ***************************************************************************
  * @brief  Main function
@@ -66,7 +61,6 @@ int main(void) {
 	BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());	// Touchscreen
 	/* Uncomment next line to enable touchscreen interrupt */
 	// BSP_TS_ITConfig();					// Enable Touchscreen interrupt
-
 	PB_init();							// Initialize the user pushbutton
 	PB_enableIRQ();						// Enable interrupt on user pushbutton
 
@@ -80,7 +74,11 @@ int main(void) {
 
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
 	MEAS_timer_init(24000);					// Configure the timer
-
+/*
+	while (true) {
+		measure_speed(false);
+		HAL_Delay(500);
+	}*/
 	/* Infinite while loop */
 	while (1) {							// Infinitely loop in main function
 		BSP_LED_Toggle(LED3);			// Visual feedback when running
@@ -108,13 +106,13 @@ int main(void) {
 		case MENU_NONE:					// No transition => do nothing
 			break;
 		case MENU_ZERO:
-			while(true){
+			while (true) {
 				fft_showcase();
 			}
 			break;
 		case MENU_ONE:
 			init_speed();
-			while(true){
+			while (true) {
 				measure_speed(false);
 				HAL_Delay(500);
 			}
@@ -123,13 +121,15 @@ int main(void) {
 			break;
 		case MENU_TWO:
 			init_speed();
-			while(true){
+			while (true) {
 				measure_speed(true);
 			}
 			break;
 		case MENU_THREE:
-			ADC1_IN13_ADC2_IN5_dual_init();
-			ADC1_IN13_ADC2_IN5_dual_start();
+			//ADC1_IN13_ADC2_IN5_dual_init();
+			//ADC1_IN13_ADC2_IN5_dual_start();
+			//ADC1_IN13_ADC2_IN5_dual_init();
+			//ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
 			DAC_init();
@@ -147,15 +147,14 @@ int main(void) {
 	}
 }
 
-
 /** ***************************************************************************
  * @brief System Clock Configuration
  *
  *****************************************************************************/
-static void SystemClock_Config(void){
-	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+static void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
 	/* Configure the main internal regulator output voltage */
 	__HAL_RCC_PWR_CLK_ENABLE();
 	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
@@ -187,7 +186,6 @@ static void SystemClock_Config(void){
 	ADC->CCR |= ADC_CCR_ADCPRE_0;
 }
 
-
 /** ***************************************************************************
  * @brief Disable the GYRO on the microcontroller board.
  *
@@ -200,8 +198,7 @@ static void SystemClock_Config(void){
  * @n An other solution would be to remove the GYRO
  * from the microcontroller board by unsoldering it.
  *****************************************************************************/
-static void gyro_disable(void)
-{
+static void gyro_disable(void) {
 	__HAL_RCC_GPIOC_CLK_ENABLE();		// Enable Clock for GPIO port C
 	/* Disable PC1 and PF8 first */
 	GPIOC->MODER &= ~GPIO_MODER_MODER1; // Reset mode for PC1

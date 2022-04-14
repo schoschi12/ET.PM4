@@ -44,34 +44,6 @@ void init_range(void) {
 }
 
 void DAC_sawtooth(void) {
-	static DAC_ChannelConfTypeDef sConfig;
-
-	/*##-1- Initialize the DAC peripheral ######################################*/
-	if (HAL_DAC_Init(&DacHandle) != HAL_OK) {
-		/* Error */
-		ErrorHandler();
-	}
-
-	/*##-1- DAC channel1 Configuration #########################################*/
-	sConfig.DAC_Trigger = DAC_TRIGGER_T6_TRGO;
-	sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
-
-	if (HAL_DAC_ConfigChannel(&DacHandle, &sConfig, DAC_CHANNEL_2) != HAL_OK) {
-		/* Channel configuration Error */
-		ErrorHandler();
-	}
-	uint32_t resolution = 1024;
-	uint32_t Wave_LUT[resolution];
-	for (int i = 0; i < resolution; i++) {
-		Wave_LUT[i] = i * 4096 / resolution;
-	}
-
-	if (HAL_DAC_Start_DMA(&DacHandle, DAC_CHANNEL_2,
-			(uint32_t*) Wave_LUT, resolution, DAC_ALIGN_12B_R)
-			!= HAL_OK) {
-		/* Start DMA Error */
-		ErrorHandler();
-	}
 	/*
 	 //HAL_DAC_Start_DMA();
 	 HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, (uint32_t*) Wave_LUT, resolution,
