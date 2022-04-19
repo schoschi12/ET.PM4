@@ -75,11 +75,17 @@ float measure_speed(bool human_detection) {
 		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 		BSP_LCD_SetFont(&Font24);
 		double freq = (double) index * SAMPLING_RATE / (double) ADC_NUMS;
+		double freq_shift = (index - ADC_NUMS / 2) * SAMPLING_RATE / ADC_NUMS;
 		double speed = freq / 158;
-		snprintf(text, 15, "Freq %4dHz", (int) freq);
+		double speed_shift = freq_shift / 158;
+		snprintf(text, 15, "Freq_raw %4dHz", (int) freq);
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-		snprintf(text, 15, "Speed %4dmm/s", (int) (speed * 1000));
+		snprintf(text, 15, "Speed_raw %4dmm/s", (int) (speed * 1000));
 		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
+		snprintf(text, 15, "Freq_shift %4dHz", (int) freq_shift);
+		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
+		snprintf(text, 15, "Speed_shift %4dmm/s", (int) (speed_shift * 1000));
+		BSP_LCD_DisplayStringAt(0, 110, (uint8_t*) text, LEFT_MODE);
 		return speed;
 	}
 
