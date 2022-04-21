@@ -72,8 +72,16 @@ int main(void) {
 
 	gyro_disable();						// Disable gyro, use those analog inputs
 
+	GPIO_Amplifier_init();
+	GPIO_Buzzer_init();
+	GPIO_LED_init();
+
+
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
 	MEAS_timer_init(24000);					// Configure the timer
+	DAC_init();
+	DAC_active = true;
+	tim_TIM7_periodicConfig(500);
 /*
 	while (true) {
 		measure_speed(false);
@@ -82,6 +90,9 @@ int main(void) {
 	/* Infinite while loop */
 	while (1) {							// Infinitely loop in main function
 		BSP_LED_Toggle(LED3);			// Visual feedback when running
+
+		//HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_SET);
 
 		if (MEAS_data_ready) {			// Show data if new data available
 			MEAS_data_ready = false;

@@ -23,3 +23,4 @@
 void fft_showcase();
 void init_speed(void);
 float measure_speed(bool human_detection);
+void tim_TIM7_periodicConfig(uint32_t DAC_frequency);
