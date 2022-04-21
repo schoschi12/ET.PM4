@@ -52,12 +52,12 @@ float measure_speed(bool human_detection) {
 	float maxValue;
 	float fft1[ADC_NUMS];
 	//float fft2[ADC_NUMS];
-	/*
+
 	ADC1_IN13_ADC2_IN5_dual_init();
 	ADC1_IN13_ADC2_IN5_dual_start();
 	while (MEAS_data_ready == false)
 		;
-	*/
+
 	//artificial_signal(200, 16000, ADC_NUMS);
 	MEAS_data_ready = false;
 	maxValue = complete_fft(ADC_NUMS, fft1);
@@ -122,7 +122,6 @@ void fft_showcase() {
 			index = i;
 		}
 	}
-
 	char text[16];
 
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);

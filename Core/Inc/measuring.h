@@ -23,7 +23,7 @@ extern bool MEAS_data_ready;
 //uint32_t MEAS_input_count;
 extern bool DAC_active;
 
-#define ADC_NUMS		256 //60			///< Number of samples
+#define ADC_NUMS			256 //60			///< Number of samples
 //#define ADC_FS			24000 //600			///< Sampling freq. => 12 samples for a 50Hz period
 
 

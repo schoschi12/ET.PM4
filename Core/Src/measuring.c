@@ -402,7 +402,7 @@ float complete_fft(uint32_t samples, float output[]) {
 	//float middle1[samples];
 	//float middle2[samples];
 	uint32_t input[ADC_NUMS * 2];
-	artificial_signal(200, 16000, ADC_NUMS, input);
+	//artificial_signal(500, 16000, ADC_NUMS, input);
 	float Output[samples];
 	//float Output2[samples];
 	//float maxValue;
@@ -413,8 +413,8 @@ float complete_fft(uint32_t samples, float output[]) {
 
 	float inputComplex[samples * 2];
 	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
-		inputComplex[i] = (float) (input[i]);
-		//inputComplex[i] = (float) (ADC_samples[i]);
+		//inputComplex[i] = (float) (input[i]);
+		inputComplex[i] = (float) (ADC_samples[i]);
 	}
 
 	//filter_dc(inputComplex, (samples * 2));
