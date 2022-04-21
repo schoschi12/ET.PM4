@@ -144,3 +144,44 @@ void fft_showcase() {
 		//DrawBar(30 + 2 * i, 220, 120, (uint16_t)maxValue, (float)fft2[(uint16_t)i], 0x1234, 0xFFFF);
 	}
 }
+/** ***************************************************************************
+ * @brief initialize timercounter 7 to a milisecond based timer with enabled
+ * interrupt
+ * 84MHz --> 84MHz/((4096/DAC_STEP)*2)
+ *****************************************************************************/
+void tim_TIM7_periodicConfig(uint32_t DAC_frequency) {
+	//Enable TIM7 timer
+	RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+	//1 Pulse mode enable
+	TIM7->CR1 &= ~(TIM_CR1_OPM);
+	//Mode --> RESET
+	TIM7->CR2 &= ~(TIM_CR2_MMS);
+
+	//Prescaler
+	TIM7->PSC = 42e6/DAC_frequency/((4096/DAC_STEP)*2) - 1;
+	//Period
+	TIM7->ARR = 2 - 1; //42MHz
+
+	//Clear Update Interrupt
+	TIM7->SR &= ~(1UL << 0);
+	//Enable update interrupt
+	TIM7->DIER |= 0x01;
+	//Enable NVIC Interrupt
+	NVIC_EnableIRQ(TIM7_IRQn);
+	//Start perodic timer
+	TIM7->CR1 |= 0x01;
+}
+
+/** ***************************************************************************
+ * @brief interrupt service routine of timercounter 7. Occurs periodically and
+ * counts timer_value_ms up.
+ *****************************************************************************/
+void TIM7_IRQHandler(void) {
+	if (TIM7->SR & 0x01) {
+		TIM7->SR &= ~(1UL); //reset flag
+		if (DAC_active) {
+				DAC_increment();
+			}
+
+		}
+	}

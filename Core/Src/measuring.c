@@ -82,14 +82,130 @@
 bool MEAS_data_ready = false;			///< New data is ready
 uint32_t MEAS_input_count = 1;			///< 1 or 2 input channels?
 bool DAC_active = false;				///< DAC output active?
+bool upcounting = true;
 
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
 static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
 static uint32_t DAC_sample = 0;			///< DAC output value
 
+
 /******************************************************************************
  * Functions
+ ******************************************************************************/
+
+/** ***************************************************************************
+ * @brief Configure GPIOs in push-pull mode
+ *
+ * @note configuration of both GPIO pins for the amplifier
+ * - I(t) = PE03
+ * - Q(t) = PE01
  *****************************************************************************/
+void GPIO_Amplifier_init(void)
+{
+		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+
+		/* GPIO Ports Clock Enable */
+		__GPIOE_CLK_ENABLE();
+
+		/*Configure GPIO pin : PE01 */
+		GPIO_InitStruct.Pin = GPIO_PIN_1;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+		HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+		/*Configure GPIO pin : PE03 */
+		GPIO_InitStruct.Pin = GPIO_PIN_3;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+		HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+}
+
+/** ***************************************************************************
+ * @brief set GPIO Pins
+ *
+ * @note doubles the amplification of each channel
+ * - I(t) = PE03
+ * - Q(t) = PE01
+ *****************************************************************************/
+void GPIO_set_gain(void)
+{
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_SET);
+}
+
+/** ***************************************************************************
+ * @brief reset GPIO Pins
+ *
+ * @note reset amplification to normal approx. 60dB at 1000Hz
+ * - I(t) = PE03
+ * - Q(t) = PE01
+ *****************************************************************************/
+void GPIO_reset_gain(void)
+{
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
+}
+
+/** ***************************************************************************
+ * @brief Configure GPIOs in push-pull mode
+ *
+ * @note configuration of PE05 for the buzzer
+ *
+ *****************************************************************************/
+void GPIO_Buzzer_init(void)
+{
+		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+
+		/* GPIO Ports Clock Enable */
+		__GPIOE_CLK_ENABLE();
+
+
+		/*Configure GPIO pin : PE05 */
+		GPIO_InitStruct.Pin = GPIO_PIN_5;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+		GPIO_InitStruct.Pull = GPIO_PULLUP;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+		HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+}
+
+void GPIO_LED_init(void)
+{
+		GPIO_InitTypeDef GPIO_InitStruct  = { 0 };
+
+		/* GPIO Ports Clock Enable */
+		__GPIOF_CLK_ENABLE();
+
+
+		/*Configure GPIO pin : PF06 */
+		GPIO_InitStruct.Pin = GPIO_PIN_6;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+		GPIO_InitStruct.Pull = GPIO_PULLUP;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+		HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+}
+/** ***************************************************************************
+ * @brief activate buzzer
+ *
+ * @note activate buzzer
+ *
+ *****************************************************************************/
+void GPIO_set_Buzzer(void)
+{
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_SET);
+}
+/** ***************************************************************************
+ * @brief deactivate buzzer
+ *
+ * @note deactivate buzzer
+ *
+ *****************************************************************************/
+void GPIO_reset_Buzzer(void)
+{
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
+}
 
 /** ***************************************************************************
  * @brief Configure GPIOs in analog mode.
@@ -137,11 +253,23 @@ void DAC_init(void) {
  *
  *****************************************************************************/
 void DAC_increment(void) {
-	DAC_sample += 20;				// Increment DAC output
-	if (DAC_sample >= (1UL << ADC_DAC_RES)) {
-		DAC_sample = 0;
-	}	// Go to 0
-	DAC->DHR12R2 = DAC_sample;		// Write new DAC output value
+	//DAC_sample += 68;				// Increment DAC output
+	//if (DAC_sample >= (1UL << ADC_DAC_RES)) { DAC_sample = 0; }	// Go to 0
+	//DAC->DHR12R2 = DAC_sample;		// Write new DAC output value
+
+	if(DAC_sample < 4095-DAC_STEP && upcounting == true){
+		DAC_sample += DAC_STEP;				// Increment DAC output
+		DAC->DHR12R2 = DAC_sample;
+	}else{
+		upcounting = false;
+	}
+
+	if(DAC_sample != 0 && upcounting == false){
+		DAC_sample -= DAC_STEP;				// Decrement DAC output
+		DAC->DHR12R2 = DAC_sample;
+	}else{
+		upcounting = true;
+	}
 }
 
 /** ***************************************************************************
@@ -245,7 +373,7 @@ void ADC1_IN13_ADC2_IN5_dual_start(void) {
 void TIM2_IRQHandler(void) {
 	TIM2->SR &= ~TIM_SR_UIF;			// Clear pending interrupt flag
 	if (DAC_active) {
-		DAC_increment();
+		//DAC_increment();
 	}
 }
 
