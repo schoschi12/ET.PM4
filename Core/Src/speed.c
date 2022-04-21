@@ -51,13 +51,16 @@ void init_speed(void) {
 float measure_speed(bool human_detection) {
 	float maxValue;
 	float fft1[ADC_NUMS];
-	float fft2[ADC_NUMS];
+	//float fft2[ADC_NUMS];
+	/*
 	ADC1_IN13_ADC2_IN5_dual_init();
 	ADC1_IN13_ADC2_IN5_dual_start();
 	while (MEAS_data_ready == false)
 		;
+	*/
+	//artificial_signal(200, 16000, ADC_NUMS);
 	MEAS_data_ready = false;
-	maxValue = complete_fft(ADC_NUMS, fft1, fft2);
+	maxValue = complete_fft(ADC_NUMS, fft1);
 	double test = 0;
 	int index;
 	for (int i = 1; i < ADC_NUMS / 2; i++) {
@@ -68,7 +71,7 @@ float measure_speed(bool human_detection) {
 	}
 
 	if (human_detection) {
-		measure_human_detection(fft1, fft2, ADC_NUMS);
+		measure_human_detection(ADC_NUMS, fft1);
 	} else {
 		char text[16];
 		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
@@ -110,7 +113,7 @@ void fft_showcase() {
 	 HAL_Delay(10);
 	 }*/
 	MEAS_data_ready = false;
-	maxValue = complete_fft(ADC_NUMS, fft1, fft2);
+	maxValue = complete_fft(ADC_NUMS, fft1);
 	double test = 0;
 	int index;
 	for (int i = 1; i < ADC_NUMS / 2; i++) {

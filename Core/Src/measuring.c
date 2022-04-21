@@ -89,7 +89,7 @@ static uint32_t DAC_sample = 0;			///< DAC output value
 
 /******************************************************************************
  * Functions
- *******************************************************************f**********/
+ *****************************************************************************/
 
 /** ***************************************************************************
  * @brief Configure GPIOs in analog mode.
@@ -358,14 +358,36 @@ void fft_shift(float input[], float output[], int length) {
 	}
 }
 
-void filter_dc(float input[], int length){
+void filter_dc(float input[], int length) {
 	float sum = 0;
-	for (int i = 0; i < length; i++){
+	for (int i = 0; i < length; i++) {
 		sum += input[i] / length;
 	}
-	for(int i = 0; i < length; i++){
+	for (int i = 0; i < length; i++) {
 		input[i] -= sum;
 	}
+}
+
+void artificial_signal(double freq, int sampling_rate, int samples, uint32_t ADC_samples_arti[]) {
+	double real;
+	double imaginary;
+	//uint32_t ADC_samples_arti[2 * ADC_NUMS];
+	double real_array[ADC_NUMS];
+	double imaginary_array[ADC_NUMS];
+	double phi = 0;
+	double pi = 3.141592653589793;
+	for (int i = 0; i < samples; i++) {
+		real = (cos(freq * 2 * pi * i / sampling_rate)) * 0xffff;
+		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * 0xffff;
+		real_array[i] = real;
+		imaginary_array[i] = imaginary;
+		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
+		ADC_samples_arti[2 * i + 1] = (uint32_t) imaginary;
+		ADC_samples[2 * i] = (uint32_t) real;
+		ADC_samples[2 * i + 1] = (uint32_t) imaginary;
+	}
+	uint16_t breaktest;
+	//delay(500);
 }
 
 /**
@@ -374,30 +396,31 @@ void filter_dc(float input[], int length){
  * @param data contains the original data, with "samples" many samples
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
-float complete_fft(uint32_t samples, float result1[], float result2[]) {
+float complete_fft(uint32_t samples, float output[]) {
 	//float Input1[samples];
 	//float Input2[samples];
 	//float middle1[samples];
 	//float middle2[samples];
+	uint32_t input[ADC_NUMS * 2];
+	artificial_signal(200, 16000, ADC_NUMS, input);
 	float Output[samples];
 	//float Output2[samples];
 	//float maxValue;
 	//int maxIndex;
 	//arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
 	arm_cfft_instance_f32 complexInst; /* ARM CFFT module */
-	//arm_cfft_init_f32(&complexInst, samples);
+	arm_cfft_init_f32(&complexInst, samples);
 
 	float inputComplex[samples * 2];
 	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
-		inputComplex[i] = (float) (ADC_samples[i]);
+		inputComplex[i] = (float) (input[i]);
+		//inputComplex[i] = (float) (ADC_samples[i]);
 	}
 
-	filter_dc(inputComplex, (samples * 2));
+	//filter_dc(inputComplex, (samples * 2));
 
 	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
 	arm_cmplx_mag_f32(inputComplex, Output, samples);
-
-
 
 	//data = ADC_samples[MEAS_input_count*0] / f;
 	/*
@@ -428,7 +451,7 @@ float complete_fft(uint32_t samples, float result1[], float result2[]) {
 	/*
 	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
 	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>*/
-	 /* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
+	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
 	//arm_rfft_fast_init_f32(&S, samples);
 	/* Process the data through the CFFT/CIFFT module */
 	//arm_rfft_fast_f32(&S, Input1, middle1, 0);

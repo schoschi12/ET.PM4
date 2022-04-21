@@ -42,7 +42,7 @@ void ADC1_IN13_ADC2_IN5_dual_init(void);
 void ADC1_IN13_ADC2_IN5_dual_start(void);
 
 void fft_shift(float input[], float output[], int length);
-float complete_fft(uint32_t samples, float result1[], float result2[]);
+float complete_fft(uint32_t samples, float output[]);
 
 void MEAS_show_data(void);
 
