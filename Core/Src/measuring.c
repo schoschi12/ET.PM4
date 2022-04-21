@@ -51,7 +51,6 @@
  * @date 17.06.2021
  *****************************************************************************/
 
-
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -86,9 +85,8 @@ bool DAC_active = false;				///< DAC output active?
 bool upcounting = true;
 
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
-static uint32_t ADC_samples[2*ADC_NUMS];///< ADC values of max. 2 input channels
+static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
 static uint32_t DAC_sample = 0;			///< DAC output value
-
 
 
 /******************************************************************************
@@ -209,7 +207,6 @@ void GPIO_reset_Buzzer(void)
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
-
 /** ***************************************************************************
  * @brief Configure GPIOs in analog mode.
  *
@@ -219,17 +216,15 @@ void GPIO_reset_Buzzer(void)
  * - ADC12_IN5 = GPIO PA5
  * - DAC_OUT2 = GPIO PA5 (= same GPIO as ADC12_IN5)
  *****************************************************************************/
-void MEAS_GPIO_analog_init(void)
-{
+void MEAS_GPIO_analog_init(void) {
 	__HAL_RCC_GPIOF_CLK_ENABLE();		// Enable Clock for GPIO port F
 	GPIOF->MODER |= (GPIO_MODER_MODER6_Msk);// Analog mode for PF6 = ADC3_IN4
 	__HAL_RCC_GPIOC_CLK_ENABLE();		// Enable Clock for GPIO port C
 	GPIOC->MODER |= (GPIO_MODER_MODER3_Msk);// Analog mode for PC3 = ADC123_IN13
 	__HAL_RCC_GPIOA_CLK_ENABLE();		// Enable Clock for GPIO port A
-	GPIOA->MODER |= (GPIO_MODER_MODER5_Msk);// Analog mode for PA5 ADC12_IN5
-	GPIOA->MODER |= (GPIO_MODER_MODER6_Msk);// Analog mode for PA5 ADC12_IN5
+	GPIOA->MODER |= (GPIO_MODER_MODER5_Msk);	// Analog mode for PA5 ADC12_IN5
+	GPIOA->MODER |= (GPIO_MODER_MODER6_Msk);	// Analog mode for PA5 ADC12_IN5
 }
-
 
 /** ***************************************************************************
  * @brief Resets the DAC
@@ -241,7 +236,6 @@ void DAC_reset(void) {
 	RCC->APB1RSTR &= ~RCC_APB1RSTR_DACRST;	// Release reset of the DAC
 }
 
-
 /** ***************************************************************************
  * @brief Initialize the DAC
  *
@@ -249,12 +243,10 @@ void DAC_reset(void) {
  * @n As DAC_OUT2 = GPIO PA5 (= same GPIO as ADC12_IN5)
  * it is possible to monitor the output voltage DAC_OUT2 by the input ADC12_IN5.
  *****************************************************************************/
-void DAC_init(void)
-{
+void DAC_init(void) {
 	__HAL_RCC_DAC_CLK_ENABLE();			// Enable Clock for DAC
 	DAC->CR |= DAC_CR_EN2;				// Enable DAC output 2
 }
-
 
 /** ***************************************************************************
  * @brief Increment the DAC value and write it to the output
@@ -291,18 +283,14 @@ void ADC_reset(void) {
 	TIM2->CR1 &= ~TIM_CR1_CEN;				// Disable timer
 }
 
-
-
-
 /** ***************************************************************************
  * @brief Configure the timer to trigger the ADC(s)
  *
  * @note For debugging purposes the timer interrupt might be useful.
  *****************************************************************************/
-void MEAS_timer_init(int adc_fs)
-{
+void MEAS_timer_init(int adc_fs) {
 
-	int tim_prescale = (TIM_CLOCK/adc_fs/(TIM_TOP+1)-1); ///< Clock prescaler
+	int tim_prescale = (TIM_CLOCK / adc_fs / (TIM_TOP + 1) - 1); ///< Clock prescaler
 	__HAL_RCC_TIM2_CLK_ENABLE();		// Enable Clock for TIM2
 	TIM2->PSC = tim_prescale;			// Prescaler for clock freq. = 1MHz
 	TIM2->ARR = TIM_TOP;				// Auto reload = counter top value
@@ -329,10 +317,8 @@ void MEAS_timer_init(int adc_fs)
  * @n The input used with ADC2 is ADC12_IN5 = GPIO PA5
  *****************************************************************************/
 
-
 //Zu ändern: auf PC1 statt PA5 und PC3
-void ADC1_IN13_ADC2_IN5_dual_init(void)
-{
+void ADC1_IN13_ADC2_IN5_dual_init(void) {
 	MEAS_input_count = 2;				// Only 1 input is converted
 	__HAL_RCC_ADC1_CLK_ENABLE();		// Enable Clock for ADC1
 	__HAL_RCC_ADC2_CLK_ENABLE();		// Enable Clock for ADC2
@@ -344,7 +330,9 @@ void ADC1_IN13_ADC2_IN5_dual_init(void)
 	ADC2->SQR3 |= (11UL << ADC_SQR3_SQ1_Pos);	// Input 5 = first conversion
 	__HAL_RCC_DMA2_CLK_ENABLE();		// Enable Clock for DMA2
 	DMA2_Stream4->CR &= ~DMA_SxCR_EN;	// Disable the DMA stream 4
-	while (DMA2_Stream4->CR & DMA_SxCR_EN) { ; }	// Wait for DMA to finish
+	while (DMA2_Stream4->CR & DMA_SxCR_EN) {
+		;
+	}	// Wait for DMA to finish
 	DMA2->HIFCR |= DMA_HIFCR_CTCIF4;	// Clear transfer complete interrupt fl.
 	DMA2_Stream4->CR |= (0UL << DMA_SxCR_CHSEL_Pos);	// Select channel 0
 	DMA2_Stream4->CR |= DMA_SxCR_PL_1;		// Priority high
@@ -353,17 +341,15 @@ void ADC1_IN13_ADC2_IN5_dual_init(void)
 	DMA2_Stream4->CR |= DMA_SxCR_MINC;	// Increment memory address pointer
 	DMA2_Stream4->CR |= DMA_SxCR_TCIE;	// Transfer complete interrupt enable
 	DMA2_Stream4->NDTR = ADC_NUMS;		// Number of data items to transfer
-	DMA2_Stream4->PAR = (uint32_t)&ADC->CDR;	// Peripheral register address
-	DMA2_Stream4->M0AR = (uint32_t)ADC_samples;	// Buffer memory loc. address
+	DMA2_Stream4->PAR = (uint32_t) &ADC->CDR;	// Peripheral register address
+	DMA2_Stream4->M0AR = (uint32_t) ADC_samples;// Buffer memory loc. address
 }
-
 
 /** ***************************************************************************
  * @brief Start DMA, ADC and timer
  *
  *****************************************************************************/
-void ADC1_IN13_ADC2_IN5_dual_start(void)
-{
+void ADC1_IN13_ADC2_IN5_dual_start(void) {
 	//DAC_init(); ///////////////////////////////
 	DMA2_Stream4->CR |= DMA_SxCR_EN;	// Enable DMA
 	NVIC_ClearPendingIRQ(DMA2_Stream4_IRQn);	// Clear pending DMA interrupt
@@ -371,7 +357,7 @@ void ADC1_IN13_ADC2_IN5_dual_start(void)
 	ADC1->CR2 |= ADC_CR2_ADON;			// Enable ADC1
 	ADC2->CR2 |= ADC_CR2_ADON;			// Enable ADC2
 	TIM2->CR1 |= TIM_CR1_CEN;			// Enable timer
-	while(MEAS_data_ready == false){
+	while (MEAS_data_ready == false) {
 		//DAC_increment();
 		//printf("inc");
 		//HAL_Delay(1);
@@ -384,14 +370,12 @@ void ADC1_IN13_ADC2_IN5_dual_start(void)
  * @note This interrupt handler was only used for debugging purposes
  * and to increment the DAC value.
  *****************************************************************************/
-void TIM2_IRQHandler(void)
-{
+void TIM2_IRQHandler(void) {
 	TIM2->SR &= ~TIM_SR_UIF;			// Clear pending interrupt flag
 	if (DAC_active) {
 		//DAC_increment();
 	}
 }
-
 
 /** ***************************************************************************
  * @brief Interrupt handler for the ADCs
@@ -399,8 +383,7 @@ void TIM2_IRQHandler(void)
  * Reads one sample from the ADC3 DataRegister and transfers it to a buffer.
  * @n Stops when ADC_NUMS samples have been read.
  *****************************************************************************/
-void ADC_IRQHandler(void)
-{
+void ADC_IRQHandler(void) {
 	if (ADC3->SR & ADC_SR_EOC) {		// Check if ADC3 end of conversion
 		ADC_samples[ADC_sample_count++] = ADC3->DR;	// Read input channel 1 only
 		if (ADC_sample_count >= ADC_NUMS) {		// Buffer full
@@ -413,20 +396,20 @@ void ADC_IRQHandler(void)
 	}
 }
 
-
 /** ***************************************************************************
  * @brief Interrupt handler for DMA2 Stream1
  *
  * The samples from the ADC3 have been transfered to memory by the DMA2 Stream1
  * and are ready for processing.
  *****************************************************************************/
-void DMA2_Stream1_IRQHandler(void)
-{
+void DMA2_Stream1_IRQHandler(void) {
 	if (DMA2->LISR & DMA_LISR_TCIF1) {	// Stream1 transfer compl. interrupt f.
 		NVIC_DisableIRQ(DMA2_Stream1_IRQn);	// Disable DMA interrupt in the NVIC
 		NVIC_ClearPendingIRQ(DMA2_Stream1_IRQn);// Clear pending DMA interrupt
 		DMA2_Stream1->CR &= ~DMA_SxCR_EN;	// Disable the DMA
-		while (DMA2_Stream1->CR & DMA_SxCR_EN) { ; }	// Wait for DMA to finish
+		while (DMA2_Stream1->CR & DMA_SxCR_EN) {
+			;
+		}	// Wait for DMA to finish
 		DMA2->LIFCR |= DMA_LIFCR_CTCIF1;// Clear transfer complete interrupt fl.
 		TIM2->CR1 &= ~TIM_CR1_CEN;		// Disable timer
 		ADC3->CR2 &= ~ADC_CR2_ADON;		// Disable ADC3
@@ -436,20 +419,20 @@ void DMA2_Stream1_IRQHandler(void)
 	}
 }
 
-
 /** ***************************************************************************
  * @brief Interrupt handler for DMA2 Stream3
  *
  * The samples from the ADC3 have been transfered to memory by the DMA2 Stream1
  * and are ready for processing.
  *****************************************************************************/
-void DMA2_Stream3_IRQHandler(void)
-{
+void DMA2_Stream3_IRQHandler(void) {
 	if (DMA2->LISR & DMA_LISR_TCIF3) {	// Stream3 transfer compl. interrupt f.
 		NVIC_DisableIRQ(DMA2_Stream3_IRQn);	// Disable DMA interrupt in the NVIC
 		NVIC_ClearPendingIRQ(DMA2_Stream3_IRQn);// Clear pending DMA interrupt
 		DMA2_Stream3->CR &= ~DMA_SxCR_EN;	// Disable the DMA
-		while (DMA2_Stream3->CR & DMA_SxCR_EN) { ; }	// Wait for DMA to finish
+		while (DMA2_Stream3->CR & DMA_SxCR_EN) {
+			;
+		}	// Wait for DMA to finish
 		DMA2->LIFCR |= DMA_LIFCR_CTCIF3;// Clear transfer complete interrupt fl.
 		TIM2->CR1 &= ~TIM_CR1_CEN;		// Disable timer
 		ADC2->CR2 &= ~ADC_CR2_ADON;		// Disable ADC2
@@ -458,7 +441,6 @@ void DMA2_Stream3_IRQHandler(void)
 		MEAS_data_ready = true;
 	}
 }
-
 
 /** ***************************************************************************
  * @brief Interrupt handler for DMA2 Stream4
@@ -471,69 +453,118 @@ void DMA2_Stream3_IRQHandler(void)
  * ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0]
  * and are therefore extracted before further processing.
  *****************************************************************************/
-void DMA2_Stream4_IRQHandler(void)
-{
+void DMA2_Stream4_IRQHandler(void) {
 	if (DMA2->HISR & DMA_HISR_TCIF4) {	// Stream4 transfer compl. interrupt f.
 		NVIC_DisableIRQ(DMA2_Stream4_IRQn);	// Disable DMA interrupt in the NVIC
 		NVIC_ClearPendingIRQ(DMA2_Stream4_IRQn);// Clear pending DMA interrupt
 		DMA2_Stream4->CR &= ~DMA_SxCR_EN;	// Disable the DMA
-		while (DMA2_Stream4->CR & DMA_SxCR_EN) { ; }	// Wait for DMA to finish
+		while (DMA2_Stream4->CR & DMA_SxCR_EN) {
+			;
+		}	// Wait for DMA to finish
 		DMA2->HIFCR |= DMA_HIFCR_CTCIF4;// Clear transfer complete interrupt fl.
 		TIM2->CR1 &= ~TIM_CR1_CEN;		// Disable timer
 		ADC1->CR2 &= ~ADC_CR2_ADON;		// Disable ADC1
 		ADC2->CR2 &= ~ADC_CR2_ADON;		// Disable ADC2
 		ADC->CCR &= ~ADC_CCR_DMA_1;		// Disable DMA mode
 		/* Extract combined samples */
-		for (int32_t i = ADC_NUMS-1; i >= 0; i--){
-			ADC_samples[2*i+1] = (ADC_samples[i] >> 16);
-			ADC_samples[2*i]   = (ADC_samples[i] & 0xffff);
+		for (int32_t i = ADC_NUMS - 1; i >= 0; i--) {
+			ADC_samples[2 * i + 1] = (ADC_samples[i] >> 16);
+			ADC_samples[2 * i] = (ADC_samples[i] & 0xffff);
 		}
 		ADC_reset();
 		MEAS_data_ready = true;
 	}
 }
+
+void fft_shift(float input[], float output[], int length) {
+	for (int i = 0; i < length; i++) {
+		if (i < (length / 2)) {
+			output[i] = input[i + ((length + 1) / 2)];
+		} else {
+			output[i] = input[i - (length / 2)];
+		}
+	}
+}
+
+void filter_dc(float input[], int length) {
+	float sum = 0;
+	for (int i = 0; i < length; i++) {
+		sum += input[i] / length;
+	}
+	for (int i = 0; i < length; i++) {
+		input[i] -= sum;
+	}
+}
+
+void artificial_signal(double freq, int sampling_rate, int samples, uint32_t ADC_samples_arti[]) {
+	double real;
+	double imaginary;
+	//uint32_t ADC_samples_arti[2 * ADC_NUMS];
+	double real_array[ADC_NUMS];
+	double imaginary_array[ADC_NUMS];
+	double phi = 0;
+	double pi = 3.141592653589793;
+	for (int i = 0; i < samples; i++) {
+		real = (cos(freq * 2 * pi * i / sampling_rate)) * 0xffff;
+		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * 0xffff;
+		real_array[i] = real;
+		imaginary_array[i] = imaginary;
+		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
+		ADC_samples_arti[2 * i + 1] = (uint32_t) imaginary;
+		ADC_samples[2 * i] = (uint32_t) real;
+		ADC_samples[2 * i + 1] = (uint32_t) imaginary;
+	}
+	uint16_t breaktest;
+	//delay(500);
+}
+
 /**
  *
  * @param samples indicates the length of the "data" array. Has to be 64, 256 or 1024.
  * @param data contains the original data, with "samples" many samples
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
-float complete_fft(uint32_t samples, float result1[], float result2[]){
-	float Input1[samples];
-	float Input2[samples];
-	float middle1[samples];
-	float middle2[samples];
+float complete_fft(uint32_t samples, float output[]) {
+	//float Input1[samples];
+	//float Input2[samples];
+	//float middle1[samples];
+	//float middle2[samples];
+	uint32_t input[ADC_NUMS * 2];
+	//artificial_signal(500, 16000, ADC_NUMS, input);
 	float Output[samples];
 	//float Output2[samples];
-	float maxValue;
-	int maxIndex;
+	//float maxValue;
+	//int maxIndex;
 	//arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
 	arm_cfft_instance_f32 complexInst; /* ARM CFFT module */
-	//arm_cfft_init_f32(&complexInst, samples);
+	arm_cfft_init_f32(&complexInst, samples);
 
-	float InputComplex[samples * 2];
-	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++){
-		InputComplex[i] = (float)(ADC_samples[i]);
+	float inputComplex[samples * 2];
+	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
+		//inputComplex[i] = (float) (input[i]);
+		inputComplex[i] = (float) (ADC_samples[i]);
 	}
 
-	arm_cfft_f32(&complexInst, InputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
-	arm_cmplx_mag_f32(InputComplex, Output, samples);
+	//filter_dc(inputComplex, (samples * 2));
+
+	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
+	arm_cmplx_mag_f32(inputComplex, Output, samples);
 
 	//data = ADC_samples[MEAS_input_count*0] / f;
 	/*
-	for (uint16_t i = 0; i < ADC_NUMS; i++){
-		Input1[i] = (float)(ADC_samples[i*2]);
-		//Input1[i+1] = 0;
-	}
-	*/
+	 for (uint16_t i = 0; i < ADC_NUMS; i++){
+	 Input1[i] = (float)(ADC_samples[i*2]);
+	 //Input1[i+1] = 0;
+	 }
+	 */
 	/* Draw the  values of input channel 2 (if present) as a curve */
 	/*
-	if (MEAS_input_count == 2) {
-		for (uint16_t i = 0; i < ADC_NUMS; i++){
-			Input2[i] = (float)(ADC_samples[i*2+1]);
-			//Input2[i+1] = 0;
-		}
-	}*/
+	 if (MEAS_input_count == 2) {
+	 for (uint16_t i = 0; i < ADC_NUMS; i++){
+	 Input2[i] = (float)(ADC_samples[i*2+1]);
+	 //Input2[i+1] = 0;
+	 }
+	 }*/
 	//uint32_t *ADC_samples = get_ADC_samples();
 //	for(int i = 0; i < (samples * 2); i += 2){
 //		/* Real part, make offset by ADC / 2 */
@@ -547,26 +578,22 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
 //	}
 	/*
 	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
-	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>
+	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>*/
 	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
 	//arm_rfft_fast_init_f32(&S, samples);
-
 	/* Process the data through the CFFT/CIFFT module */
 	//arm_rfft_fast_f32(&S, Input1, middle1, 0);
 	//arm_rfft_fast_f32(&S, Input2, middle2, 0);
-
 	/* Process the data through the Complex Magnitud-e Module for calculating the magnitude at each bin */
 	//arm_cmplx_mag_f32(middle1, result1, samples);
 	//arm_cmplx_mag_f32(middle2, result2, samples);
-
 	//result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
 	//result2 = Output2;
 	/* Calculates maxValue and returns corresponding value */
 	//arm_max_f32(result2, samples, &maxValue, &maxIndex);
-	return maxValue;
-
+	//return maxValue;
+	return 0;
 }
-
 
 /** ***************************************************************************
  * @brief Draw buffer data as curves
@@ -580,8 +607,7 @@ float complete_fft(uint32_t samples, float result1[], float result2[]){
  * and should be moved to a separate file in the final version
  * because displaying is not related to measuring.
  *****************************************************************************/
-void MEAS_show_data(void)
-{
+void MEAS_show_data(void) {
 	const uint32_t Y_OFFSET = 260;
 	const uint32_t X_SIZE = 240;
 	const uint32_t f = (1 << ADC_DAC_RES) / Y_OFFSET + 1;	// Scaling factor
@@ -589,40 +615,46 @@ void MEAS_show_data(void)
 	uint32_t data_last;
 	/* Clear the display */
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET+1);
+	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET + 1);
 	/* Write first 2 samples as numbers */
 	BSP_LCD_SetFont(&Font24);
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	char text[16];
-	snprintf(text, 15, "1. sample %4d", (int)(ADC_samples[0]));
-	BSP_LCD_DisplayStringAt(0, 50, (uint8_t *)text, LEFT_MODE);
-	snprintf(text, 15, "2. sample %4d", (int)(ADC_samples[1]));
-	BSP_LCD_DisplayStringAt(0, 80, (uint8_t *)text, LEFT_MODE);
+	snprintf(text, 15, "1. sample %4d", (int) (ADC_samples[0]));
+	BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+	snprintf(text, 15, "2. sample %4d", (int) (ADC_samples[1]));
+	BSP_LCD_DisplayStringAt(0, 80, (uint8_t*) text, LEFT_MODE);
 	/* Draw the  values of input channel 1 as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-	data = ADC_samples[MEAS_input_count*0] / f;
-	for (uint32_t i = 1; i < ADC_NUMS; i++){
+	data = ADC_samples[MEAS_input_count * 0] / f;
+	for (uint32_t i = 1; i < ADC_NUMS; i++) {
 		data_last = data;
-		data = (ADC_samples[MEAS_input_count*i]) / f;
-		if (data > Y_OFFSET) { data = Y_OFFSET; }// Limit value, prevent crash
-		BSP_LCD_DrawLine(4*(i-1), Y_OFFSET-data_last, 4*i, Y_OFFSET-data);
+		data = (ADC_samples[MEAS_input_count * i]) / f;
+		if (data > Y_OFFSET) {
+			data = Y_OFFSET;
+		}	// Limit value, prevent crash
+		BSP_LCD_DrawLine(4 * (i - 1), Y_OFFSET - data_last, 4 * i,
+				Y_OFFSET - data);
 	}
 	/* Draw the  values of input channel 2 (if present) as a curve */
 	if (MEAS_input_count == 2) {
 		BSP_LCD_SetTextColor(LCD_COLOR_RED);
-		data = ADC_samples[MEAS_input_count*0+1] / f;
-		for (uint32_t i = 1; i < ADC_NUMS; i++){
+		data = ADC_samples[MEAS_input_count * 0 + 1] / f;
+		for (uint32_t i = 1; i < ADC_NUMS; i++) {
 			data_last = data;
-			data = (ADC_samples[MEAS_input_count*i+1]) / f;
-			if (data > Y_OFFSET) { data = Y_OFFSET; }// Limit value, prevent crash
-			BSP_LCD_DrawLine(4*(i-1), Y_OFFSET-data_last, 4*i, Y_OFFSET-data);
+			data = (ADC_samples[MEAS_input_count * i + 1]) / f;
+			if (data > Y_OFFSET) {
+				data = Y_OFFSET;
+			}	// Limit value, prevent crash
+			BSP_LCD_DrawLine(4 * (i - 1), Y_OFFSET - data_last, 4 * i,
+					Y_OFFSET - data);
 		}
 	}
 	/* Clear buffer and flag */
-	for (uint32_t i = 0; i < ADC_NUMS; i++){
-		ADC_samples[2*i] = 0;
-		ADC_samples[2*i+1] = 0;
+	for (uint32_t i = 0; i < ADC_NUMS; i++) {
+		ADC_samples[2 * i] = 0;
+		ADC_samples[2 * i + 1] = 0;
 	}
 	ADC_sample_count = 0;
 }

@@ -56,5 +56,5 @@ void DAC_sawtooth(void) {
 }
 
 float measure_range(void) {
-return 1.1;
+	return 1.1;
 }

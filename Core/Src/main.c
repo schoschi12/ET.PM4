@@ -137,6 +137,9 @@ int main(void) {
 			}
 			break;
 		case MENU_THREE:
+			//artificial_signal(200, 16000, ADC_NUMS);
+			//float result1[0];
+			//complete_fft(16000, result1);
 			//ADC1_IN13_ADC2_IN5_dual_init();
 			//ADC1_IN13_ADC2_IN5_dual_start();
 			//ADC1_IN13_ADC2_IN5_dual_init();
