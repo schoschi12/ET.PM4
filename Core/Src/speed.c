@@ -52,9 +52,10 @@ float measure_speed(bool human_detection) {
 	float maxValue;
 	float fft1[ADC_NUMS];
 	//float fft2[ADC_NUMS];
-
+#if !defined SIMULATION
 	ADC1_IN13_ADC2_IN5_dual_init();
 	ADC1_IN13_ADC2_IN5_dual_start();
+#endif
 	while (MEAS_data_ready == false)
 		;
 

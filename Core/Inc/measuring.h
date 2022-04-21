@@ -28,7 +28,7 @@ extern bool DAC_active;
 
 #define DAC_STEP 		32			///< Step Size at every
 
-
+#define SIMULATION
 
 /******************************************************************************
  * Functions
