@@ -173,11 +173,16 @@ void tim_TIM7_TriangleWave(uint32_t DAC_frequency) {
 void tim_TIM7_TriangleWave_Start(void){
 	//Start perodic timer
 	TIM7->CR1 |= 0x01;
+
+	//Activate DAC
+	DAC_active = true;
 }
 void tim_TIM7_TriangleWave_Stop(void){
 	//Stop perodic timer
 	TIM7->CR1 &= ~(0x01);
 
+	//Deactivate DAC
+	DAC_active = false;
 }
 
 /** ***************************************************************************
