@@ -257,15 +257,15 @@ void DAC_increment(void) {
 	//if (DAC_sample >= (1UL << ADC_DAC_RES)) { DAC_sample = 0; }	// Go to 0
 	//DAC->DHR12R2 = DAC_sample;		// Write new DAC output value
 
-	if(DAC_sample < 4095-DAC_STEP && upcounting == true){
-		DAC_sample += DAC_STEP;				// Increment DAC output
+	if(DAC_sample < 4095-DAC_STEP_SIZE && upcounting == true){
+		DAC_sample += DAC_STEP_SIZE;				// Increment DAC output
 		DAC->DHR12R2 = DAC_sample;
 	}else{
 		upcounting = false;
 	}
 
 	if(DAC_sample != 0 && upcounting == false){
-		DAC_sample -= DAC_STEP;				// Decrement DAC output
+		DAC_sample -= DAC_STEP_SIZE;				// Decrement DAC output
 		DAC->DHR12R2 = DAC_sample;
 	}else{
 		upcounting = true;
