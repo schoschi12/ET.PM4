@@ -26,7 +26,8 @@ extern bool DAC_active;
 #define ADC_NUMS			256 //60			///< Number of samples
 //#define ADC_FS			24000 //600			///< Sampling freq. => 12 samples for a 50Hz period
 
-#define DAC_STEP 		32			///< Step Size at every
+#define DAC_STEP 			128					///< Steps at every slope
+#define DAC_STEP_SIZE 		(4096/DAC_STEP)		///< Step Size for DAC
 
 #define SIMULATION
 
