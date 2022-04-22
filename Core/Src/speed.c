@@ -145,11 +145,11 @@ void fft_showcase() {
 	}
 }
 /** ***************************************************************************
- * @brief initialize timercounter 7 to a milisecond based timer with enabled
- * interrupt
- * 84MHz --> 84MHz/((4096/DAC_STEP)*2)
+ * @brief initialize timercounter 7 with variable frequency with interrupt
+ *
+ * Prescaler = 42e6/DAC_frequency/((4096/DAC_STEP_SIZE)*2)
  *****************************************************************************/
-void tim_TIM7_periodicConfig(uint32_t DAC_frequency) {
+void tim_TIM7_TriangleWave(uint32_t DAC_frequency) {
 	//Enable TIM7 timer
 	RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
 	//1 Pulse mode enable
@@ -158,7 +158,7 @@ void tim_TIM7_periodicConfig(uint32_t DAC_frequency) {
 	TIM7->CR2 &= ~(TIM_CR2_MMS);
 
 	//Prescaler
-	TIM7->PSC = 42e6/DAC_frequency/((4096/DAC_STEP)*2) - 1;
+	TIM7->PSC = 42e6/DAC_frequency/((4096/DAC_STEP_SIZE)*2) - 1;
 	//Period
 	TIM7->ARR = 2 - 1; //42MHz
 
@@ -168,8 +168,21 @@ void tim_TIM7_periodicConfig(uint32_t DAC_frequency) {
 	TIM7->DIER |= 0x01;
 	//Enable NVIC Interrupt
 	NVIC_EnableIRQ(TIM7_IRQn);
+
+}
+void tim_TIM7_TriangleWave_Start(void){
 	//Start perodic timer
 	TIM7->CR1 |= 0x01;
+
+	//Activate DAC
+	DAC_active = true;
+}
+void tim_TIM7_TriangleWave_Stop(void){
+	//Stop perodic timer
+	TIM7->CR1 &= ~(0x01);
+
+	//Deactivate DAC
+	DAC_active = false;
 }
 
 /** ***************************************************************************

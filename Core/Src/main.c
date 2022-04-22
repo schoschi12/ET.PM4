@@ -80,8 +80,8 @@ int main(void) {
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
 	MEAS_timer_init(24000);					// Configure the timer
 	DAC_init();
-	DAC_active = true;
-	tim_TIM7_periodicConfig(500);
+	tim_TIM7_TriangleWave(500);
+	tim_TIM7_TriangleWave_Start();
 /*
 	while (true) {
 		measure_speed(false);
