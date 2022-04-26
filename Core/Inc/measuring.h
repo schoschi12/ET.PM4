@@ -23,13 +23,13 @@ extern bool MEAS_data_ready;
 //uint32_t MEAS_input_count;
 extern bool DAC_active;
 
-#define ADC_NUMS			256 //60			///< Number of samples
+#define ADC_NUMS			1024//256 //60			///< Number of samples
 //#define ADC_FS			24000 //600			///< Sampling freq. => 12 samples for a 50Hz period
 
 #define DAC_STEP 			128					///< Steps at every slope
 #define DAC_STEP_SIZE 		(4096/DAC_STEP)		///< Step Size for DAC
 
-#define SIMULATION
+//#define SIMULATION
 
 /******************************************************************************
  * Functions
@@ -53,7 +53,7 @@ void GPIO_reset_Buzzer(void);
 void GPIO_LED_init(void);
 
 void fft_shift(float input[], float output[], int length);
-float complete_fft(uint32_t samples, float output[]);
+float complete_fft(uint32_t samples, float output[], uint32_t offset);
 
 void MEAS_show_data(void);
 

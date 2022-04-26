@@ -21,7 +21,7 @@
  * Defines
  *****************************************************************************/
 #define SAMPLING_RATE	16000		///<Sampling rate of ADC
-
+#define SAMPLE_LENGTH	256
 /******************************************************************************
  * Variables
  *****************************************************************************/
@@ -52,7 +52,7 @@ void init_speed(void) {
 
 float measure_speed(bool human_detection) {
 	float maxValue;
-	float fft1[ADC_NUMS];
+	float fft1[SAMPLE_LENGTH];
 	//float fft2[ADC_NUMS];
 #if !defined SIMULATION
 	ADC1_IN13_ADC2_IN5_dual_init();
@@ -63,10 +63,10 @@ float measure_speed(bool human_detection) {
 //#else
 	//artificial_signal(200, 16000, ADC_NUMS);
 #endif
-	maxValue = complete_fft(ADC_NUMS, fft1);
+	maxValue = complete_fft(SAMPLE_LENGTH, fft1, 0);
 	double test = 0;
 	int index;
-	for (int i = 0; i < (ADC_NUMS); i++) {
+	for (int i = 0; i < (SAMPLE_LENGTH); i++) {
 		if ((double) fft1[i] > test) {
 			test = (double) fft1[i];
 			index = i;
@@ -74,13 +74,13 @@ float measure_speed(bool human_detection) {
 	}
 
 	if (human_detection) {
-		measure_human_detection(ADC_NUMS, fft1);
+		measure_human_detection(SAMPLE_LENGTH, fft1);
 	} else {
 		char text[16];
 		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 		BSP_LCD_SetFont(&Font24);
-		double freq = (double) index * SAMPLING_RATE / (double) ADC_NUMS;
+		double freq = (double) index * SAMPLING_RATE / (double) SAMPLE_LENGTH;
 		double freq_shift;
 		if(index < ADC_NUMS / 2){
 			freq_shift = freq;
@@ -105,8 +105,8 @@ float measure_speed(bool human_detection) {
 void fft_showcase() {
 	float maxValue;
 	//uint32_t data[SAMPLES];
-	float fft1[ADC_NUMS];
-	float fft2[ADC_NUMS];
+	float fft1[SAMPLE_LENGTH];
+	float fft2[SAMPLE_LENGTH];
 	printf("test");
 	//DAC_init();
 	//ADC1_IN13_ADC2_IN5_dual_init();
@@ -121,10 +121,10 @@ void fft_showcase() {
 	 HAL_Delay(10);
 	 }*/
 	MEAS_data_ready = false;
-	maxValue = complete_fft(ADC_NUMS, fft1);
+	maxValue = complete_fft(256, fft1, 0);
 	double test = 0;
 	int index;
-	for (int i = 1; i < ADC_NUMS / 2; i++) {
+	for (int i = 1; i < SAMPLE_LENGTH / 2; i++) {
 		if ((double) fft1[i] > test) {
 			test = (double) fft1[i];
 			index = i;
@@ -135,7 +135,7 @@ void fft_showcase() {
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	BSP_LCD_SetFont(&Font24);
-	double freq = (double) index * 24000 / (double) ADC_NUMS;
+	double freq = (double) index * 24000 / (double) SAMPLE_LENGTH;
 	snprintf(text, 15, "Freq %4dHz", (int) freq);
 	BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
 	snprintf(text, 15, "Speed %4dmm/s", (int) (freq / 158 * 1000));

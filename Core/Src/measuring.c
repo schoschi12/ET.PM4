@@ -85,7 +85,7 @@ bool DAC_active = false;				///< DAC output active?
 bool upcounting = true;
 
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
-static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
+static uint32_t ADC_samples[2 * 2 * 1024];///< ADC values of max. 2 input channels
 static uint32_t DAC_sample = 0;			///< DAC output value
 
 int frequency_changer = 0;
@@ -520,15 +520,15 @@ void artificial_signal(double freq, int sampling_rate, int samples,
  * @param data contains the original data, with "samples" many samples
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
-float complete_fft(uint32_t samples, float output[]) {
+float complete_fft(uint32_t samples, float output[], uint32_t offset) {
 	//float Input1[samples];
 	//float Input2[samples];
 	//float middle1[samples];
 	//float middle2[samples];
-	uint32_t input[ADC_NUMS * 2];
+	uint32_t input[samples * 2];
 
 #if defined SIMULATION
-	artificial_signal(frequency_changer * 500, 16000, ADC_NUMS, input);
+	artificial_signal(frequency_changer * 500, 16000, samples, input);
 	frequency_changer++;
 	if(frequency_changer > 32){
 		frequency_changer = 0;
@@ -544,11 +544,11 @@ float complete_fft(uint32_t samples, float output[]) {
 	arm_cfft_init_f32(&complexInst, samples);
 
 	float inputComplex[samples * 2];
-	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
+	for (uint16_t i = 0; i < (samples * 2); i++) {
 #if defined SIMULATION
 		inputComplex[i] = (float) (input[i]);
 #else
-		inputComplex[i] = (float) (ADC_samples[i]);
+		inputComplex[i] = (float) (ADC_samples[i + offset]);
 #endif
 	}
 
@@ -600,7 +600,7 @@ float complete_fft(uint32_t samples, float output[]) {
 	//arm_max_f32(result2, samples, &maxValue, &maxIndex);
 	//return maxValue;
 	uint32_t temp = (uint32_t)maxValue;
-	MEAS_show_data_spectrum(output, input, temp, ADC_NUMS);
+	MEAS_show_data_spectrum(output, input, temp, samples);
 	return 0;
 }
 

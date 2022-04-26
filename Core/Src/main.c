@@ -146,8 +146,9 @@ int main(void) {
 			//ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
-			DAC_init();
-			DAC_sawtooth();
+			//DAC_init();
+			//DAC_sawtooth();
+			measure_range();
 			break;
 		case MENU_FIVE:
 			//ADC3_IN13_IN4_scan_init();
