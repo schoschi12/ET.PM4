@@ -78,7 +78,7 @@ int main(void) {
 
 
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
-	MEAS_timer_init(24000);					// Configure the timer
+//	MEAS_timer_init(24000);					// Configure the timer
 	DAC_init();
 	tim_TIM7_TriangleWave(500);
 /*
@@ -108,6 +108,9 @@ int main(void) {
 				BSP_LED_Off(LED4);
 			}
 		}
+
+	//	init_range();
+	//	measure_range();
 
 		/* Comment next line if touchscreen interrupt is enabled */
 		MENU_check_transition();
@@ -145,8 +148,9 @@ int main(void) {
 			//ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
+			while(1){
 			init_range();
-			measure_range();
+			measure_range();}
 			break;
 		case MENU_FIVE:
 			//ADC3_IN13_IN4_scan_init();

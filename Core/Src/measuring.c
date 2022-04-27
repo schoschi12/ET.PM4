@@ -500,10 +500,10 @@ float complete_fft(uint32_t samples, float output[]) {
 	//float middle2[samples];
 	uint32_t input[ADC_NUMS * 2];
 	//artificial_signal(500, 16000, ADC_NUMS, input);
-	float Output[samples];
+	//float Output[samples];
 	//float Output2[samples];
-	//float maxValue;
-	//int maxIndex;
+	float maxValue;
+	int maxIndex;
 	//arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
 	arm_cfft_instance_f32 complexInst; /* ARM CFFT module */
 	arm_cfft_init_f32(&complexInst, samples);
@@ -514,10 +514,10 @@ float complete_fft(uint32_t samples, float output[]) {
 		inputComplex[i] = (float) (ADC_samples[i]);
 	}
 
-	//filter_dc(inputComplex, (samples * 2));
+	filter_dc(inputComplex, (samples * 2));
 
 	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
-	arm_cmplx_mag_f32(inputComplex, Output, samples);
+	arm_cmplx_mag_f32(inputComplex, output, samples);
 
 	//data = ADC_samples[MEAS_input_count*0] / f;
 	/*
@@ -559,9 +559,9 @@ float complete_fft(uint32_t samples, float output[]) {
 	//result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
 	//result2 = Output2;
 	/* Calculates maxValue and returns corresponding value */
-	//arm_max_f32(result2, samples, &maxValue, &maxIndex);
-	//return maxValue;
-	return 0;
+	arm_max_f32(output, samples, &maxValue, &maxIndex);
+	return maxValue;
+	//return 0;
 }
 
 /** ***************************************************************************

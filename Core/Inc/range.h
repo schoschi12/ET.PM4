@@ -23,7 +23,7 @@
  *****************************************************************************/
 void init_range(void);
 void DAC_sawtooth(void);
-float measure_range(void);
+void measure_range(void);
 
 
 void DAC_reset(void);

@@ -35,10 +35,6 @@
  * Variables
  *****************************************************************************/
 
-DAC_HandleTypeDef DacHandle;
-DMA_HandleTypeDef hdma_dac_ch1;
-//TIM_HandleTypeDef htim2;
-
 bool DAC_active = false;				///< DAC output active?
 bool upcounting = true;
 
@@ -54,7 +50,7 @@ void init_range(void) {
 }
 
 
-float measure_range(void) {
+void measure_range(void) {
 	float distance;
 	float fft1[ADC_NUMS];
 	//float sum = 0.0f;
@@ -65,6 +61,7 @@ float measure_range(void) {
 
 	switch (state){
 		case 0:
+		ADC1_IN13_ADC2_IN5_dual_init();
 		ADC1_IN13_ADC2_IN5_dual_start();
 		//tim_TIM7_TriangleWave(500);
 		tim_TIM7_TriangleWave_Start();
@@ -85,8 +82,8 @@ float measure_range(void) {
 			state = 2;
 		break;
 		case 2:
-			if(getStatus() == false){ //ramp down
 
+			if(getStatus() == false){ //ramp down
 
 			while (MEAS_data_ready == false)
 				;
@@ -96,7 +93,22 @@ float measure_range(void) {
 			state = 0;
 			//showdata();
 
-			ADC1_IN13_ADC2_IN5_dual_stop();
+			frquency_distance = (df1 + df2)/2;
+			frequency_speed = abs(df1 - df2)/2;
+
+			distance = (float)(LIGHTSPEED*abs(frquency_distance)/(2*B_SWEEP/t_sweep));
+
+			char text[16];
+			BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+			BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+			BSP_LCD_SetFont(&Font24);
+
+			snprintf(text, 15, "Freq_raw %4dHz", (int) frquency_distance);
+			BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+			snprintf(text, 15, "Distance_raw %4dm", (int) distance);
+			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
+
+			//ADC1_IN13_ADC2_IN5_dual_stop();
 			tim_TIM7_TriangleWave_Stop();
 			DAC_reset();
 			//stopDAC();
@@ -110,23 +122,11 @@ float measure_range(void) {
 	}
 
 
-	 frquency_distance = (df1 + df2)/2;
-	 frequency_speed = abs(df1 - df2)/2;
-
-	distance = LIGHTSPEED*abs(frquency_distance)/(2*B_SWEEP/t_sweep);
-
-	char text[16];
-			BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-			BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-			BSP_LCD_SetFont(&Font24);
-
-			snprintf(text, 15, "Freq_raw %4dHz", (int) frquency_distance);
-			BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-			snprintf(text, 15, "Distance_raw %4dm", (int) distance);
-			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
 
 
-	return distance;
+
+
+	//return distance;
 }
 
 /** ***************************************************************************
@@ -176,5 +176,5 @@ void DAC_increment(void) {
 }
 
 bool getStatus(void){
-	return DAC_active;
+	return upcounting;
 }
