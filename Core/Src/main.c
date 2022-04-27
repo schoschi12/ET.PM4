@@ -81,7 +81,6 @@ int main(void) {
 	MEAS_timer_init(24000);					// Configure the timer
 	DAC_init();
 	tim_TIM7_TriangleWave(500);
-	tim_TIM7_TriangleWave_Start();
 /*
 	while (true) {
 		measure_speed(false);
@@ -146,8 +145,8 @@ int main(void) {
 			//ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
-			DAC_init();
-			DAC_sawtooth();
+			init_range();
+			measure_range();
 			break;
 		case MENU_FIVE:
 			//ADC3_IN13_IN4_scan_init();

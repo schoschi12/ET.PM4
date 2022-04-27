@@ -15,6 +15,7 @@
 
 #include "speed.h"
 #include "measuring.h"
+#include "range.h"
 #include "stm32f429i_discovery_lcd.h"
 
 /******************************************************************************

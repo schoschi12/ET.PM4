@@ -10,12 +10,13 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
+#include <stdbool.h>
 
 /******************************************************************************
  * Defines
  *****************************************************************************/
-
+#define DAC_STEP 			128					///< Steps at every slope
+#define DAC_STEP_SIZE 		(4096/DAC_STEP)		///< Step Size for DAC
 
 /******************************************************************************
  * Functions
@@ -23,3 +24,9 @@
 void init_range(void);
 void DAC_sawtooth(void);
 float measure_range(void);
+
+
+void DAC_reset(void);
+void DAC_init(void);
+void DAC_increment(void);
+bool getStatus(void);

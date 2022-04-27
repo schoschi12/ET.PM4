@@ -61,7 +61,6 @@
 #include "stm32f429i_discovery_ts.h"
 
 #include "arm_math.h"
-
 #include "measuring.h"
 
 /******************************************************************************
@@ -81,12 +80,11 @@
  *****************************************************************************/
 bool MEAS_data_ready = false;			///< New data is ready
 uint32_t MEAS_input_count = 1;			///< 1 or 2 input channels?
-bool DAC_active = false;				///< DAC output active?
-bool upcounting = true;
+
 
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
 static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
-static uint32_t DAC_sample = 0;			///< DAC output value
+
 
 
 /******************************************************************************
@@ -226,51 +224,7 @@ void MEAS_GPIO_analog_init(void) {
 	GPIOA->MODER |= (GPIO_MODER_MODER6_Msk);	// Analog mode for PA5 ADC12_IN5
 }
 
-/** ***************************************************************************
- * @brief Resets the DAC
- *
- * when it is no longer used.
- *****************************************************************************/
-void DAC_reset(void) {
-	RCC->APB1RSTR |= RCC_APB1RSTR_DACRST;	// Reset the DAC
-	RCC->APB1RSTR &= ~RCC_APB1RSTR_DACRST;	// Release reset of the DAC
-}
 
-/** ***************************************************************************
- * @brief Initialize the DAC
- *
- * The output used is DAC_OUT2 = GPIO PA5
- * @n As DAC_OUT2 = GPIO PA5 (= same GPIO as ADC12_IN5)
- * it is possible to monitor the output voltage DAC_OUT2 by the input ADC12_IN5.
- *****************************************************************************/
-void DAC_init(void) {
-	__HAL_RCC_DAC_CLK_ENABLE();			// Enable Clock for DAC
-	DAC->CR |= DAC_CR_EN2;				// Enable DAC output 2
-}
-
-/** ***************************************************************************
- * @brief Increment the DAC value and write it to the output
- *
- *****************************************************************************/
-void DAC_increment(void) {
-	//DAC_sample += 68;				// Increment DAC output
-	//if (DAC_sample >= (1UL << ADC_DAC_RES)) { DAC_sample = 0; }	// Go to 0
-	//DAC->DHR12R2 = DAC_sample;		// Write new DAC output value
-
-	if(DAC_sample < 4095-DAC_STEP_SIZE && upcounting == true){
-		DAC_sample += DAC_STEP_SIZE;				// Increment DAC output
-		DAC->DHR12R2 = DAC_sample;
-	}else{
-		upcounting = false;
-	}
-
-	if(DAC_sample != 0 && upcounting == false){
-		DAC_sample -= DAC_STEP_SIZE;				// Decrement DAC output
-		DAC->DHR12R2 = DAC_sample;
-	}else{
-		upcounting = true;
-	}
-}
 
 /** ***************************************************************************
  * @brief Resets the ADCs and the timer
@@ -362,6 +316,21 @@ void ADC1_IN13_ADC2_IN5_dual_start(void) {
 		//printf("inc");
 		//HAL_Delay(1);
 	}
+}
+
+/** ***************************************************************************
+ * @brief Stop DMA, ADC and timer
+ *
+ *****************************************************************************/
+void ADC1_IN13_ADC2_IN5_dual_stop(void) {
+
+	DMA2_Stream4->CR &= ~(DMA_SxCR_EN);	// Disable DMA
+	NVIC_ClearPendingIRQ(DMA2_Stream4_IRQn);	// Clear pending DMA interrupt
+	NVIC_DisableIRQ(DMA2_Stream4_IRQn);	// Enable DMA interrupt in the NVIC
+	ADC1->CR2 &= ~(ADC_CR2_ADON);			// Disable ADC1
+	ADC2->CR2 &= ~(ADC_CR2_ADON);			// Disable ADC2
+	TIM2->CR1 &= ~(TIM_CR1_CEN);			// Disable timer
+
 }
 
 /** ***************************************************************************
