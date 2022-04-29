@@ -37,6 +37,10 @@
 
 bool DAC_active = false;				///< DAC output active?
 bool upcounting = true;
+float fft1[ADC_NUMS];
+float fft2[ADC_NUMS];
+float df1;
+float df2;
 
 static uint32_t DAC_sample = 0;			///< DAC output value
 static float t_sweep = 0.001;
@@ -52,8 +56,6 @@ void init_range(void) {
 
 void measure_range(void) {
 	float distance;
-	float fft1[ADC_NUMS];
-	float fft2[ADC_NUMS];
 	//float sum = 0.0f;
 	//float df1;
 	//float df2;
