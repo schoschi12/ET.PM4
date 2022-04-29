@@ -76,17 +76,13 @@ int main(void) {
 	GPIO_Buzzer_init();
 	GPIO_LED_init();
 
-
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
 	MEAS_timer_init(24000);					// Configure the timer
-	DAC_init();
-	tim_TIM7_TriangleWave(500);
-	tim_TIM7_TriangleWave_Start();
-/*
-	while (true) {
-		measure_speed(false);
-		HAL_Delay(500);
-	}*/
+			/*
+			 while (true) {
+			 measure_speed(false);
+			 HAL_Delay(500);
+			 }*/
 	/* Infinite while loop */
 	while (1) {							// Infinitely loop in main function
 		BSP_LED_Toggle(LED3);			// Visual feedback when running
@@ -148,7 +144,10 @@ int main(void) {
 		case MENU_FOUR:
 			//DAC_init();
 			//DAC_sawtooth();
-			measure_range();
+			while (true) {
+				measure_range();
+				HAL_Delay(1000);
+			}
 			break;
 		case MENU_FIVE:
 			//ADC3_IN13_IN4_scan_init();

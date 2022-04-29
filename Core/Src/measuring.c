@@ -85,7 +85,7 @@ bool DAC_active = false;				///< DAC output active?
 bool upcounting = true;
 
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
-static uint32_t ADC_samples[2 * 2 * 1024];///< ADC values of max. 2 input channels
+static uint32_t ADC_samples[1280];	///< ADC values of max. 2 input channels
 static uint32_t DAC_sample = 0;			///< DAC output value
 
 int frequency_changer = 0;
@@ -252,15 +252,14 @@ void DAC_increment(void) {
 	//if (DAC_sample >= (1UL << ADC_DAC_RES)) { DAC_sample = 0; }	// Go to 0
 	//DAC->DHR12R2 = DAC_sample;		// Write new DAC output value
 
-
-	if(DAC_sample < 4095-DAC_STEP_SIZE && upcounting == true){
+	if (DAC_sample < 4095 - DAC_STEP_SIZE && upcounting == true) {
 		DAC_sample += DAC_STEP_SIZE;				// Increment DAC output
 		DAC->DHR12R2 = DAC_sample;
 	} else {
 		upcounting = false;
 	}
 
-	if(DAC_sample != 0 && upcounting == false){
+	if (DAC_sample != 0 && upcounting == false) {
 		DAC_sample -= DAC_STEP_SIZE;				// Decrement DAC output
 		DAC->DHR12R2 = DAC_sample;
 	} else {
@@ -353,11 +352,12 @@ void ADC1_IN13_ADC2_IN5_dual_start(void) {
 	ADC1->CR2 |= ADC_CR2_ADON;			// Enable ADC1
 	ADC2->CR2 |= ADC_CR2_ADON;			// Enable ADC2
 	TIM2->CR1 |= TIM_CR1_CEN;			// Enable timer
-	while (MEAS_data_ready == false) {
-		//DAC_increment();
-		//printf("inc");
-		//HAL_Delay(1);
-	}
+	/*
+	 while (MEAS_data_ready == false) {
+	 //DAC_increment();
+	 //printf("inc");
+	 //HAL_Delay(1);
+	 }*/
 }
 
 /** ***************************************************************************
@@ -491,6 +491,32 @@ void filter_dc(float input[], int length) {
 		input[i] -= sum;
 	}
 }
+float get_average(float arr[], int length) {
+	float average = 0;
+	for (int i = 0; i < length; i++) {
+		average += arr[i];
+	}
+	return average / length;
+}
+void high_pass(float input[], int length, int sample_size, int odd) {
+	float mov_array[sample_size];
+	int mov_array_index = 0;
+	for (int i = 0; i < sample_size; i++) {
+		mov_array[i] = input[i * 2 + odd];
+	}
+	for (int i = sample_size - 1; i < (length - sample_size + 2); i += 2) {
+		input[i + odd] = input[i + odd] - get_average(mov_array, sample_size);
+		mov_array[mov_array_index] = input[i + sample_size + 1 + odd];
+		mov_array_index++;
+		if (mov_array_index >= sample_size) {
+			mov_array_index = 0;
+		}
+	}
+	for(int i = 0; i <= sample_size / 2; i++){
+		input[i * 2 + odd] = 0;
+		input[length - i * 2 - odd] = 0;
+	}
+}
 
 void artificial_signal(double freq, int sampling_rate, int samples,
 		uint32_t ADC_samples_arti[]) {
@@ -502,8 +528,10 @@ void artificial_signal(double freq, int sampling_rate, int samples,
 	double phi = 0;
 	double pi = 3.141592653589793;
 	for (int i = 0; i < samples; i++) {
-		real = (cos(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;//0xffff;
-		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;
+		real = (cos(freq * 2 * pi * i / sampling_rate))
+				* (1 << (ADC_DAC_RES - 1)) + 0x7FF;		//0xffff;
+		imaginary = (sin(freq * 2 * pi * i / sampling_rate))
+				* (1 << (ADC_DAC_RES - 1)) + 0x7FF;
 		real_array[i] = real;
 		imaginary_array[i] = imaginary;
 		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
@@ -521,6 +549,7 @@ void artificial_signal(double freq, int sampling_rate, int samples,
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
 float complete_fft(uint32_t samples, float output[], uint32_t offset) {
+	offset *= 2;
 	//float Input1[samples];
 	//float Input2[samples];
 	//float middle1[samples];
@@ -552,59 +581,21 @@ float complete_fft(uint32_t samples, float output[], uint32_t offset) {
 #endif
 	}
 
-	filter_dc(inputComplex, (samples * 2));
+	//filter_dc(inputComplex, (samples * 2));
+	high_pass(inputComplex, (samples * 2), 19, 0);
+	high_pass(inputComplex, (samples * 2), 19, 1);
 
 	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
 	arm_cmplx_mag_f32(inputComplex, output, samples);
 	arm_max_f32(output, samples, &maxValue, &maxIndex);
-	//data = ADC_samples[MEAS_input_count*0] / f;
-	/*
-	 for (uint16_t i = 0; i < ADC_NUMS; i++){
-	 Input1[i] = (float)(ADC_samples[i*2]);
-	 //Input1[i+1] = 0;
-	 }
-	 */
-	/* Draw the  values of input channel 2 (if present) as a curve */
-	/*
-	 if (MEAS_input_count == 2) {
-	 for (uint16_t i = 0; i < ADC_NUMS; i++){
-	 Input2[i] = (float)(ADC_samples[i*2+1]);
-	 //Input2[i+1] = 0;
-	 }
-	 }*/
-	//uint32_t *ADC_samples = get_ADC_samples();
-//	for(int i = 0; i < (samples * 2); i += 2){
-//		/* Real part, make offset by ADC / 2 */
-//		Input1[(uint16_t)i] = (float)((ADC_samples[i/2] & 0xffff0000) >> 16);
-//		/* Imaginary part */
-//		Input1[(uint16_t)(i + 1)] = 0;
-//
-//		Input2[(uint16_t)i] = (float)(ADC_samples[i/2] & 0xffff);
-//		/* Imaginary part */
-//		Input2[(uint16_t)(i + 1)] = 0;
-//	}
-	/*
-	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
-	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>*/
-	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
-	//arm_rfft_fast_init_f32(&S, samples);
-	/* Process the data through the CFFT/CIFFT module */
-	//arm_rfft_fast_f32(&S, Input1, middle1, 0);
-	//arm_rfft_fast_f32(&S, Input2, middle2, 0);
-	/* Process the data through the Complex Magnitud-e Module for calculating the magnitude at each bin */
-	//arm_cmplx_mag_f32(middle1, result1, samples);
-	//arm_cmplx_mag_f32(middle2, result2, samples);
-	//result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
-	//result2 = Output2;
-	/* Calculates maxValue and returns corresponding value */
-	//arm_max_f32(result2, samples, &maxValue, &maxIndex);
-	//return maxValue;
-	uint32_t temp = (uint32_t)maxValue;
-	MEAS_show_data_spectrum(output, input, temp, samples);
+
+	uint32_t temp = (uint32_t) maxValue;
+	//MEAS_show_data_spectrum(output, input, temp, samples);
 	return 0;
 }
 
-void MEAS_show_data_spectrum(float spectrum[], uint32_t input[], uint32_t maxValue, int length) {
+void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
+		uint32_t maxValue, int length) {
 	const uint32_t Y_OFFSET = 260;
 	const uint32_t X_SIZE = 240;
 	const uint32_t f = (1 << (ADC_DAC_RES + 3)) / Y_OFFSET + 1;	// Scaling factor
