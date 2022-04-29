@@ -29,7 +29,7 @@
 #define B_SWEEP			260000		///<Bandwidth of VCO frequencyy
 #define LIGHTSPEED		299792458
 //#define T_SWEEP			1			///<Rise and fall time of triangle wave in ms!
-#define SAMPLING_RATE	32000		///<Sampling rate of ADC
+#define SAMPLING_RATE	16000		///<Sampling rate of ADC
 
 /******************************************************************************
  * Variables
@@ -53,9 +53,10 @@ void init_range(void) {
 void measure_range(void) {
 	float distance;
 	float fft1[ADC_NUMS];
+	float fft2[ADC_NUMS];
 	//float sum = 0.0f;
-	float df1;
-	float df2;
+	//float df1;
+	//float df2;
 	float frequency_speed;
 	float frquency_distance;
 
@@ -84,12 +85,13 @@ void measure_range(void) {
 		case 2:
 
 			if(getStatus() == false){ //ramp down
-
+				ADC1_IN13_ADC2_IN5_dual_init();
+				ADC1_IN13_ADC2_IN5_dual_start();
 			while (MEAS_data_ready == false)
 				;
 			MEAS_data_ready = false;
 
-			df2 = complete_fft(ADC_NUMS, fft1);
+			df2 = complete_fft(ADC_NUMS, fft2);
 			state = 0;
 			//showdata();
 
@@ -109,16 +111,16 @@ void measure_range(void) {
 			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
 
 			//ADC1_IN13_ADC2_IN5_dual_stop();
-			tim_TIM7_TriangleWave_Stop();
-			DAC_reset();
+			//tim_TIM7_TriangleWave_Stop();
+			//DAC_reset();
 			//stopDAC();
 		}
 		break;
 		default:
 		state = 0;
-		ADC1_IN13_ADC2_IN5_dual_stop();
-		tim_TIM7_TriangleWave_Stop();
-		DAC_reset();
+		//ADC1_IN13_ADC2_IN5_dual_stop();
+		//tim_TIM7_TriangleWave_Stop();
+		//DAC_reset();
 	}
 
 
