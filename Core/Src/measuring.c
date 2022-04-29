@@ -494,16 +494,17 @@ void filter_dc(float input[], int length) {
 
 void artificial_signal(double freq, int sampling_rate, int samples,
 		uint32_t ADC_samples_arti[]) {
-	double real;
-	double imaginary;
+	double real = 0x7FF; //VCC / 2
+	double imaginary = 0x7FF;
 	//uint32_t ADC_samples_arti[2 * ADC_NUMS];
 	double real_array[ADC_NUMS];
 	double imaginary_array[ADC_NUMS];
-	double phi = 0;
 	double pi = 3.141592653589793;
 	for (int i = 0; i < samples; i++) {
-		real = (cos(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;//0xffff;
-		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;
+		real += (cos(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 2));
+		//real += (cos((freq + 1000) * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 3));
+		imaginary += (sin(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 2));
+		//imaginary += (sin((freq + 1000) * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 3));
 		real_array[i] = real;
 		imaginary_array[i] = imaginary;
 		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
