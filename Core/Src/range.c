@@ -53,7 +53,6 @@ void init_range(void) {
 	MEAS_timer_init(SAMPLING_RATE);
 }
 
-
 void measure_range(void) {
 	float distance;
 	//float sum = 0.0f;
@@ -62,33 +61,33 @@ void measure_range(void) {
 	float frequency_speed;
 	float frquency_distance;
 
-	switch (state){
-		case 0:
+	switch (state) {
+	case 0:
 		ADC1_IN13_ADC2_IN5_dual_init();
 		ADC1_IN13_ADC2_IN5_dual_start();
 		//tim_TIM7_TriangleWave(500);
 		tim_TIM7_TriangleWave_Start();
-		if(getStatus() == true){ //ramp up
+		if (getStatus() == true) { //ramp up
 			state = 1;
 		}
 		break;
-		case 1:
+	case 1:
 		//Sample frequency 16kHz, 256 Samples => 0.016s per measurement
 		//Triangle rising time = 1ms
 		//calculate mean value of samples during ramp up and down
 
-			while (MEAS_data_ready == false)
-				;
-			MEAS_data_ready = false;
+		while (MEAS_data_ready == false)
+			;
+		MEAS_data_ready = false;
 
-			df1 = complete_fft(ADC_NUMS, fft1);
-			state = 2;
+		df1 = complete_fft(ADC_NUMS, fft1);
+		state = 2;
 		break;
-		case 2:
+	case 2:
 
-			if(getStatus() == false){ //ramp down
-				ADC1_IN13_ADC2_IN5_dual_init();
-				ADC1_IN13_ADC2_IN5_dual_start();
+		if (getStatus() == false) { //ramp down
+			ADC1_IN13_ADC2_IN5_dual_init();
+			ADC1_IN13_ADC2_IN5_dual_start();
 			while (MEAS_data_ready == false)
 				;
 			MEAS_data_ready = false;
@@ -97,10 +96,11 @@ void measure_range(void) {
 			state = 0;
 			//showdata();
 
-			frquency_distance = (df1 + df2)/2;
-			frequency_speed = abs(df1 - df2)/2;
+			frquency_distance = (df1 + df2) / 2;
+			frequency_speed = abs(df1 - df2) / 2;
 
-			distance = (float)(LIGHTSPEED*abs(frquency_distance)/(2*B_SWEEP/t_sweep));
+			distance = (float) (LIGHTSPEED * abs(frquency_distance)
+					/ (2 * B_SWEEP / t_sweep));
 
 			char text[16];
 			BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
@@ -118,17 +118,12 @@ void measure_range(void) {
 			//stopDAC();
 		}
 		break;
-		default:
+	default:
 		state = 0;
 		//ADC1_IN13_ADC2_IN5_dual_stop();
 		//tim_TIM7_TriangleWave_Stop();
 		//DAC_reset();
 	}
-
-
-
-
-
 
 	//return distance;
 }
@@ -164,21 +159,21 @@ void DAC_increment(void) {
 	//if (DAC_sample >= (1UL << ADC_DAC_RES)) { DAC_sample = 0; }	// Go to 0
 	//DAC->DHR12R2 = DAC_sample;		// Write new DAC output value
 
-	if(DAC_sample < 4095-DAC_STEP_SIZE && upcounting == true){
+	if (DAC_sample < 4095 - DAC_STEP_SIZE && upcounting == true) {
 		DAC_sample += DAC_STEP_SIZE;				// Increment DAC output
 		DAC->DHR12R2 = DAC_sample;
-	}else{
+	} else {
 		upcounting = false;
 	}
 
-	if(DAC_sample != 0 && upcounting == false){
+	if (DAC_sample != 0 && upcounting == false) {
 		DAC_sample -= DAC_STEP_SIZE;				// Decrement DAC output
 		DAC->DHR12R2 = DAC_sample;
-	}else{
+	} else {
 		upcounting = true;
 	}
 }
 
-bool getStatus(void){
+bool getStatus(void) {
 	return upcounting;
 }

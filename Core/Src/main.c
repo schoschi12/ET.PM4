@@ -111,11 +111,12 @@ int main(void) {
 		/* Comment next line if touchscreen interrupt is enabled */
 		MENU_check_transition();
 
-		while (1) {
-			init_range();
-			measure_range();
-		}
-
+		/*
+		 while (1) {
+		 init_range();
+		 measure_range();
+		 }
+		 */
 		switch (MENU_get_transition()) {	// Handle user menu choice
 		case MENU_NONE:					// No transition => do nothing
 			break;
