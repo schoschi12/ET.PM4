@@ -129,7 +129,7 @@ int main(void) {
 			init_speed();
 			while (true) {
 				measure_speed(false);
-				HAL_Delay(500);
+				HAL_Delay(1000);
 			}
 			//ADC3_IN4_timer_init();
 			//ADC3_IN4_timer_start();

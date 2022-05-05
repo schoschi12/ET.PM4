@@ -25,7 +25,7 @@
 /******************************************************************************
  * Defines
  *****************************************************************************/
-#define SAMPLES			256
+//#define SAMPLES			256
 #define B_SWEEP			260000		///<Bandwidth of VCO frequencyy
 #define LIGHTSPEED		299792458
 //#define T_SWEEP			1			///<Rise and fall time of triangle wave in ms!

@@ -86,6 +86,7 @@ static uint32_t ADC_sample_count = 0;	///< Index for buffer
 static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
 
 
+int frequency_changer = 0;
 
 /******************************************************************************
  * Functions
@@ -98,24 +99,24 @@ static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channe
  * - I(t) = PE03
  * - Q(t) = PE01
  *****************************************************************************/
-void GPIO_Amplifier_init(void)
-{
-		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+void GPIO_Amplifier_init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
-		/* GPIO Ports Clock Enable */
-		__GPIOE_CLK_ENABLE();
+	/* GPIO Ports Clock Enable */
+	__GPIOE_CLK_ENABLE()
+	;
 
-		/*Configure GPIO pin : PE01 */
-		GPIO_InitStruct.Pin = GPIO_PIN_1;
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
-		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
-		HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+	/*Configure GPIO pin : PE01 */
+	GPIO_InitStruct.Pin = GPIO_PIN_1;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+	HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-		/*Configure GPIO pin : PE03 */
-		GPIO_InitStruct.Pin = GPIO_PIN_3;
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
-		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
-		HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+	/*Configure GPIO pin : PE03 */
+	GPIO_InitStruct.Pin = GPIO_PIN_3;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+	HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
 }
 
@@ -126,8 +127,7 @@ void GPIO_Amplifier_init(void)
  * - I(t) = PE03
  * - Q(t) = PE01
  *****************************************************************************/
-void GPIO_set_gain(void)
-{
+void GPIO_set_gain(void) {
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_SET);
 }
@@ -139,8 +139,7 @@ void GPIO_set_gain(void)
  * - I(t) = PE03
  * - Q(t) = PE01
  *****************************************************************************/
-void GPIO_reset_gain(void)
-{
+void GPIO_reset_gain(void) {
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
 }
@@ -151,37 +150,35 @@ void GPIO_reset_gain(void)
  * @note configuration of PE05 for the buzzer
  *
  *****************************************************************************/
-void GPIO_Buzzer_init(void)
-{
-		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+void GPIO_Buzzer_init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
-		/* GPIO Ports Clock Enable */
-		__GPIOE_CLK_ENABLE();
+	/* GPIO Ports Clock Enable */
+	__GPIOE_CLK_ENABLE()
+	;
 
-
-		/*Configure GPIO pin : PE05 */
-		GPIO_InitStruct.Pin = GPIO_PIN_5;
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
-		GPIO_InitStruct.Pull = GPIO_PULLUP;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
-		HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+	/*Configure GPIO pin : PE05 */
+	GPIO_InitStruct.Pin = GPIO_PIN_5;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+	HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
 }
 
-void GPIO_LED_init(void)
-{
-		GPIO_InitTypeDef GPIO_InitStruct  = { 0 };
+void GPIO_LED_init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
-		/* GPIO Ports Clock Enable */
-		__GPIOF_CLK_ENABLE();
+	/* GPIO Ports Clock Enable */
+	__GPIOF_CLK_ENABLE()
+	;
 
-
-		/*Configure GPIO pin : PF06 */
-		GPIO_InitStruct.Pin = GPIO_PIN_6;
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
-		GPIO_InitStruct.Pull = GPIO_PULLUP;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
-		HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+	/*Configure GPIO pin : PF06 */
+	GPIO_InitStruct.Pin = GPIO_PIN_6;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     // digital Output
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+	HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
 }
 /** ***************************************************************************
@@ -190,8 +187,7 @@ void GPIO_LED_init(void)
  * @note activate buzzer
  *
  *****************************************************************************/
-void GPIO_set_Buzzer(void)
-{
+void GPIO_set_Buzzer(void) {
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_SET);
 }
 /** ***************************************************************************
@@ -200,8 +196,7 @@ void GPIO_set_Buzzer(void)
  * @note deactivate buzzer
  *
  *****************************************************************************/
-void GPIO_reset_Buzzer(void)
-{
+void GPIO_reset_Buzzer(void) {
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
@@ -223,7 +218,6 @@ void MEAS_GPIO_analog_init(void) {
 	GPIOA->MODER |= (GPIO_MODER_MODER5_Msk);	// Analog mode for PA5 ADC12_IN5
 	GPIOA->MODER |= (GPIO_MODER_MODER6_Msk);	// Analog mode for PA5 ADC12_IN5
 }
-
 
 
 /** ***************************************************************************
@@ -465,7 +459,8 @@ void filter_dc(float input[], int length) {
 	}
 }
 
-void artificial_signal(double freq, int sampling_rate, int samples, uint32_t ADC_samples_arti[]) {
+void artificial_signal(double freq, int sampling_rate, int samples,
+		uint32_t ADC_samples_arti[]) {
 	double real;
 	double imaginary;
 	//uint32_t ADC_samples_arti[2 * ADC_NUMS];
@@ -474,8 +469,8 @@ void artificial_signal(double freq, int sampling_rate, int samples, uint32_t ADC
 	double phi = 0;
 	double pi = 3.141592653589793;
 	for (int i = 0; i < samples; i++) {
-		real = (cos(freq * 2 * pi * i / sampling_rate)) * 0xffff;
-		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * 0xffff;
+		real = (cos(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;//0xffff;
+		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;
 		real_array[i] = real;
 		imaginary_array[i] = imaginary;
 		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
@@ -484,7 +479,6 @@ void artificial_signal(double freq, int sampling_rate, int samples, uint32_t ADC
 		ADC_samples[2 * i + 1] = (uint32_t) imaginary;
 	}
 	uint16_t breaktest;
-	//delay(500);
 }
 
 /**
@@ -510,15 +504,17 @@ float complete_fft(uint32_t samples, float output[]) {
 
 	float inputComplex[samples * 2];
 	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
-		//inputComplex[i] = (float) (input[i]);
+#if defined SIMULATION
+		inputComplex[i] = (float) (input[i]);
+#else
 		inputComplex[i] = (float) (ADC_samples[i]);
+#endif
 	}
 
 	filter_dc(inputComplex, (samples * 2));
 
 	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
 	arm_cmplx_mag_f32(inputComplex, output, samples);
-
 	//data = ADC_samples[MEAS_input_count*0] / f;
 	/*
 	 for (uint16_t i = 0; i < ADC_NUMS; i++){
@@ -562,6 +558,93 @@ float complete_fft(uint32_t samples, float output[]) {
 	arm_max_f32(output, samples, &maxValue, &maxIndex);
 	return maxValue;
 	//return 0;
+}
+
+void MEAS_show_data_spectrum(float spectrum[], uint32_t input[], uint32_t maxValue, int length) {
+	const uint32_t Y_OFFSET = 260;
+	const uint32_t X_SIZE = 240;
+	const uint32_t f = (1 << (ADC_DAC_RES + 3)) / Y_OFFSET + 1;	// Scaling factor
+	const Y_OFFSET_spectrum = 220;
+	const uint32_t fspectrum = maxValue / Y_OFFSET_spectrum * 2;//(1 << 31) / Y_OFFSET_spectrum + 1;// Scaling factor
+	uint32_t data;
+	uint32_t data_last;
+	const int x_scale = 5;
+	/* Clear the display */
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET + 1);
+	/* Write first 2 samples as numbers */
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	char text[16];
+	/*
+	 snprintf(text, 15, "1. sample %4d", (int) (ADC_samples[0]));
+	 BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+	 snprintf(text, 15, "2. sample %4d", (int) (ADC_samples[1]));
+	 BSP_LCD_DisplayStringAt(0, 80, (uint8_t*) text, LEFT_MODE);
+	 */
+	/* Draw the  values of input channel 1 as a curve */
+	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+#if defined SIMULATION
+	data = input[2 * 0] / f;
+#else
+	data = ADC_samples[2 * 0] / f;
+#endif
+	for (uint32_t i = 1; i < (240 / x_scale); i++) {
+		data_last = data;
+#if defined SIMULATION
+		data = (input[2 * i]) / f;
+#else
+		data = (ADC_samples[2 * i]) / f;
+#endif
+		if (data > Y_OFFSET) {
+			data = Y_OFFSET;
+		}	// Limit value, prevent crash
+		BSP_LCD_DrawLine(x_scale * (i - 1), Y_OFFSET - data_last, x_scale * i,
+				Y_OFFSET - data);
+	}
+	/* Draw the  values of input channel 2 (if present) as a curve */
+	BSP_LCD_SetTextColor(LCD_COLOR_RED);
+#if defined SIMULATION
+	data = input[2 * 0 + 1] / f;
+#else
+	data = ADC_samples[2 * 0 + 1] / f;
+#endif
+	for (uint32_t i = 1; i < (240 / x_scale); i++) {
+		data_last = data;
+#if defined SIMULATION
+		data = (input[2 * i + 1]) / f;
+#else
+		data = (ADC_samples[2 * i + 1]) / f;
+#endif
+		if (data > Y_OFFSET) {
+			data = Y_OFFSET;
+		}	// Limit value, prevent crash
+		BSP_LCD_DrawLine(x_scale * (i - 1), Y_OFFSET - data_last, x_scale * i,
+				Y_OFFSET - data);
+	}
+
+	uint32_t spectrumData[ADC_NUMS];
+	BSP_LCD_SetTextColor(LCD_COLOR_LIGHTMAGENTA);
+	data = ((uint32_t) spectrum[0]) / fspectrum;
+	spectrumData[0] = data;
+	for (uint32_t i = 1; i < length; i++) {
+		data_last = data;
+		data = (uint32_t) spectrum[i] / fspectrum;
+		spectrumData[i] = data;
+		if (data > Y_OFFSET_spectrum) {
+			data = Y_OFFSET_spectrum;
+		}	// Limit value, prevent crash
+		BSP_LCD_DrawLine((i - 1), Y_OFFSET_spectrum - data_last, i,
+				Y_OFFSET_spectrum - data);
+	}
+
+	/* Clear buffer and flag */
+	for (uint32_t i = 0; i < ADC_NUMS; i++) {
+		ADC_samples[2 * i] = 0;
+		ADC_samples[2 * i + 1] = 0;
+	}
+	ADC_sample_count = 0;
 }
 
 /** ***************************************************************************
