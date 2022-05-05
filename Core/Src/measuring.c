@@ -556,6 +556,7 @@ float complete_fft(uint32_t samples, float output[]) {
 	//result2 = Output2;
 	/* Calculates maxValue and returns corresponding value */
 	arm_max_f32(output, samples, &maxValue, &maxIndex);
+	MEAS_show_data_spectrum(output, input, (uint32_t) maxValue, samples);
 	return maxValue;
 	//return 0;
 }
