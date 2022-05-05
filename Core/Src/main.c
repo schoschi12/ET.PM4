@@ -76,17 +76,15 @@ int main(void) {
 	GPIO_Buzzer_init();
 	GPIO_LED_init();
 
-
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
-	MEAS_timer_init(24000);					// Configure the timer
-	DAC_init();
-	tim_TIM7_TriangleWave(500);
-	tim_TIM7_TriangleWave_Start();
-/*
-	while (true) {
-		measure_speed(false);
-		HAL_Delay(500);
-	}*/
+//	MEAS_timer_init(24000);					// Configure the timer
+//	DAC_init();
+//	tim_TIM7_TriangleWave(250);
+	/*
+	 while (true) {
+	 measure_speed(false);
+	 HAL_Delay(500);
+	 }*/
 	/* Infinite while loop */
 	while (1) {							// Infinitely loop in main function
 		BSP_LED_Toggle(LED3);			// Visual feedback when running
@@ -113,6 +111,12 @@ int main(void) {
 		/* Comment next line if touchscreen interrupt is enabled */
 		MENU_check_transition();
 
+		/*
+		 while (1) {
+		 init_range();
+		 measure_range();
+		 }
+		 */
 		switch (MENU_get_transition()) {	// Handle user menu choice
 		case MENU_NONE:					// No transition => do nothing
 			break;
@@ -146,8 +150,10 @@ int main(void) {
 			//ADC1_IN13_ADC2_IN5_dual_start();
 			break;
 		case MENU_FOUR:
-			DAC_init();
-			DAC_sawtooth();
+			while (1) {
+				init_range();
+				measure_range();
+			}
 			break;
 		case MENU_FIVE:
 			//ADC3_IN13_IN4_scan_init();

@@ -15,6 +15,7 @@
 
 #include "speed.h"
 #include "measuring.h"
+#include "range.h"
 #include "stm32f429i_discovery_lcd.h"
 
 /******************************************************************************
@@ -65,39 +66,39 @@ float measure_speed(bool human_detection) {
 #endif
 	maxValue = complete_fft(ADC_NUMS, fft1);
 	double test = 0;
-	int index;
-	for (int i = 0; i < (ADC_NUMS); i++) {
-		if ((double) fft1[i] > test) {
-			test = (double) fft1[i];
-			index = i;
+		int index;
+		for (int i = 0; i < (ADC_NUMS); i++) {
+			if ((double) fft1[i] > test) {
+				test = (double) fft1[i];
+				index = i;
+			}
 		}
-	}
 
-	if (human_detection) {
-		measure_human_detection(ADC_NUMS, fft1);
-	} else {
-		char text[16];
-		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-		BSP_LCD_SetFont(&Font24);
-		double freq = (double) index * SAMPLING_RATE / (double) ADC_NUMS;
-		double freq_shift;
-		if(index < ADC_NUMS / 2){
-			freq_shift = freq;
-		}else{
-			freq_shift = freq - 16000;
-		}
-		double speed = freq / 158;
-		double speed_shift = freq_shift / 158;
-		snprintf(text, 15, "F_raw %4dHz", (int) freq);
-		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-		snprintf(text, 15, "S_raw %4dmm/s", (int) (speed * 1000));
-		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
-		snprintf(text, 15, "F_shift %4dHz", (int) freq_shift);
-		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
-		snprintf(text, 15, "S_shift %4dmm/s", (int) (speed_shift * 1000));
-		BSP_LCD_DisplayStringAt(0, 110, (uint8_t*) text, LEFT_MODE);
-		return speed;
+		if (human_detection) {
+			measure_human_detection(ADC_NUMS, fft1);
+		} else {
+			char text[16];
+			BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+			BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+			BSP_LCD_SetFont(&Font24);
+			double freq = (double) index * SAMPLING_RATE / (double) ADC_NUMS;
+			double freq_shift;
+			if(index < ADC_NUMS / 2){
+				freq_shift = freq;
+			}else{
+				freq_shift = freq - 16000;
+			}
+			double speed = freq / 158;
+			double speed_shift = freq_shift / 158;
+			snprintf(text, 15, "F_raw %4dHz", (int) freq);
+			BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+			snprintf(text, 15, "S_raw %4dmm/s", (int) (speed * 1000));
+			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
+			snprintf(text, 15, "F_shift %4dHz", (int) freq_shift);
+			BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
+			snprintf(text, 15, "S_shift %4dmm/s", (int) (speed_shift * 1000));
+			BSP_LCD_DisplayStringAt(0, 110, (uint8_t*) text, LEFT_MODE);
+			return speed;
 	}
 
 }
