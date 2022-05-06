@@ -22,12 +22,13 @@
  * Defines
  *****************************************************************************/
 #define SAMPLING_RATE	16000		///<Sampling rate of ADC
-
+#define FILTER_LENGTH	3
 /******************************************************************************
  * Variables
  *****************************************************************************/
-double medianValues;
-uint32_t length_filter = 2;
+double meanValue;
+//uint32_t FILTER_LENGTH = 3;
+double medianArr[FILTER_LENGTH];
 double speed = 0;
 double speed_shift = 0;
 /******************************************************************************
@@ -54,14 +55,28 @@ void init_speed(void) {
 #endif
 }
 
+void swap(double *xp, double *yp) {
+	double temp = *xp;
+	*xp = *yp;
+	*yp = temp;
+}
+
+void bubbleSort(double arr[], int n) {
+	int i, j;
+	for (i = 0; i < n - 1; i++)
+		// Last i elements are already in place
+		for (j = 0; j < n - i - 1; j++)
+			if (arr[j] > arr[j + 1])
+				swap(&arr[j], &arr[j + 1]);
+}
+
 float measure_speed(bool human_detection) {
 	float maxValue;
 	float fft1[ADC_NUMS];
 	//float fft2[ADC_NUMS];
-
 	ADC1_IN13_ADC2_IN5_dual_init();
-	medianValues = 0.0;
-//	for (int j = 0; j < length_filter; j++) {
+	meanValue = 0.0;
+	for (int j = 0; j < FILTER_LENGTH; j++) {
 
 		ADC1_IN13_ADC2_IN5_dual_start();
 		while (MEAS_data_ready == false)
@@ -81,7 +96,7 @@ float measure_speed(bool human_detection) {
 		}
 
 		if (human_detection) {
-			measure_human_detection(ADC_NUMS, fft1);
+			//measure_human_detection(ADC_NUMS, fft1);
 		} else {
 
 			double freq = (double) index * SAMPLING_RATE / (double) ADC_NUMS;
@@ -93,36 +108,43 @@ float measure_speed(bool human_detection) {
 			}
 			speed = freq / 158;
 			speed_shift = freq_shift / 158;
-
-			medianValues += speed_shift;
+			medianArr[j] = speed_shift;
+			meanValue += speed_shift;
 			//HAL_Delay(100);
 
-	//	}
-	//	medianValues /= ((double) length_filter);
-		char text[16];
-		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-		BSP_LCD_SetFont(&Font24);
-		//		snprintf(text, 15, "F_raw %4dHz", (int) freq);
-		//		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-		//		snprintf(text, 15, "S_raw %4dmm/s", (int) (speed * 1000));
-		//		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
-		//		snprintf(text, 15, "F_shift %4dHz", (int) freq_shift);
-		//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
-		snprintf(text, 15, "Sp. %4dmm/s", (int) (medianValues * 1000));
-		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*) text, LEFT_MODE);
-
-		//medianValues = 0;
-		return speed;
+		}
 	}
+	bubbleSort(medianArr, FILTER_LENGTH);
+	double median;
+	if (FILTER_LENGTH % 2 == 0) {
+		median = (medianArr[FILTER_LENGTH / 2]
+				+ medianArr[FILTER_LENGTH / 2 - 1]) / 2;
+	} else {
+		median = medianArr[FILTER_LENGTH / 2];
+	}
+	//	medianValues /= ((double) FILTER_LENGTH);
+	char text[16];
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	BSP_LCD_SetFont(&Font24);
+	//		snprintf(text, 15, "F_raw %4dHz", (int) freq);
+	//		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+	//		snprintf(text, 15, "S_raw %4dmm/s", (int) (speed * 1000));
+	//		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
+	//		snprintf(text, 15, "F_shift %4dHz", (int) freq_shift);
+	//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
+	snprintf(text, 15, "Sp. %4dmm/s", (int) (meanValue * 1000));
+	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*) text, LEFT_MODE);
 
+	//medianValues = 0;
+	return median;
 }
 
 void fft_showcase() {
 	float maxValue;
 	//uint32_t data[SAMPLES];
 	float fft1[ADC_NUMS];
-	float fft2[ADC_NUMS];
+	//float fft2[ADC_NUMS];
 	printf("test");
 	//DAC_init();
 	//ADC1_IN13_ADC2_IN5_dual_init();
