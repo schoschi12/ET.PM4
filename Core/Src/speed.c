@@ -22,13 +22,14 @@
  * Defines
  *****************************************************************************/
 #define SAMPLING_RATE	16000		///<Sampling rate of ADC
-#define FILTER_LENGTH	3
+#define FILTER_LENGTH	9
 /******************************************************************************
  * Variables
  *****************************************************************************/
 double meanValue;
 //uint32_t FILTER_LENGTH = 3;
 double medianArr[FILTER_LENGTH];
+double freqArr[FILTER_LENGTH];
 double speed = 0;
 double speed_shift = 0;
 /******************************************************************************
@@ -72,25 +73,22 @@ void bubbleSort(double arr[], int n) {
 
 float measure_speed(bool human_detection) {
 	float maxValue;
-	float fft1[ADC_NUMS];
-	//float fft2[ADC_NUMS];
-	ADC1_IN13_ADC2_IN5_dual_init();
+	float spectrum[ADC_NUMS];
 	meanValue = 0.0;
 	for (int j = 0; j < FILTER_LENGTH; j++) {
 
+		ADC1_IN13_ADC2_IN5_dual_init();
 		ADC1_IN13_ADC2_IN5_dual_start();
 		while (MEAS_data_ready == false)
 			;
 		MEAS_data_ready = false;
-//#else
-		//artificial_signal(200, 16000, ADC_NUMS);
 
-		maxValue = complete_fft(ADC_NUMS, fft1);
+		maxValue = complete_fft(ADC_NUMS, spectrum);
 		double test = 0;
 		int index;
 		for (int i = 0; i < (ADC_NUMS); i++) {
-			if ((double) fft1[i] > test) {
-				test = (double) fft1[i];
+			if ((double) spectrum[i] > test) {
+				test = (double) spectrum[i];
 				index = i;
 			}
 		}
@@ -108,6 +106,7 @@ float measure_speed(bool human_detection) {
 			}
 			speed = freq / 158;
 			speed_shift = freq_shift / 158;
+			freqArr[j] = freq_shift;
 			medianArr[j] = speed_shift;
 			meanValue += speed_shift;
 			//HAL_Delay(100);
@@ -123,6 +122,7 @@ float measure_speed(bool human_detection) {
 		median = medianArr[FILTER_LENGTH / 2];
 	}
 	//	medianValues /= ((double) FILTER_LENGTH);
+	clear_display();
 	char text[16];
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
@@ -133,7 +133,7 @@ float measure_speed(bool human_detection) {
 	//		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
 	//		snprintf(text, 15, "F_shift %4dHz", (int) freq_shift);
 	//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
-	snprintf(text, 15, "Sp. %4dmm/s", (int) (meanValue * 1000));
+	snprintf(text, 15, "Sp. %4dmm/s", (int) (median * 1000));
 	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*) text, LEFT_MODE);
 
 	//medianValues = 0;
