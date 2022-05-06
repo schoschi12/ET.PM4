@@ -49,6 +49,7 @@ void GPIO_LED_init(void);
 
 void fft_shift(float input[], float output[], int length);
 float complete_fft(uint32_t samples, float output[]);
+void clear_display(void);
 
 void MEAS_show_data(void);
 

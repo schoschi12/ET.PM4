@@ -81,10 +81,8 @@
 bool MEAS_data_ready = false;			///< New data is ready
 uint32_t MEAS_input_count = 1;			///< 1 or 2 input channels?
 
-
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
 static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
-
 
 int frequency_changer = 0;
 
@@ -218,7 +216,6 @@ void MEAS_GPIO_analog_init(void) {
 	GPIOA->MODER |= (GPIO_MODER_MODER5_Msk);	// Analog mode for PA5 ADC12_IN5
 	GPIOA->MODER |= (GPIO_MODER_MODER6_Msk);	// Analog mode for PA5 ADC12_IN5
 }
-
 
 /** ***************************************************************************
  * @brief Resets the ADCs and the timer
@@ -469,8 +466,10 @@ void artificial_signal(double freq, int sampling_rate, int samples,
 	double phi = 0;
 	double pi = 3.141592653589793;
 	for (int i = 0; i < samples; i++) {
-		real = (cos(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;//0xffff;
-		imaginary = (sin(freq * 2 * pi * i / sampling_rate)) * (1 << (ADC_DAC_RES - 1)) + 0x7FF;
+		real = (cos(freq * 2 * pi * i / sampling_rate))
+				* (1 << (ADC_DAC_RES - 1)) + 0x7FF;		//0xffff;
+		imaginary = (sin(freq * 2 * pi * i / sampling_rate))
+				* (1 << (ADC_DAC_RES - 1)) + 0x7FF;
 		real_array[i] = real;
 		imaginary_array[i] = imaginary;
 		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
@@ -488,80 +487,35 @@ void artificial_signal(double freq, int sampling_rate, int samples,
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
 float complete_fft(uint32_t samples, float output[]) {
-	//float Input1[samples];
-	//float Input2[samples];
-	//float middle1[samples];
-	//float middle2[samples];
 	uint32_t input[ADC_NUMS * 2];
-	//artificial_signal(500, 16000, ADC_NUMS, input);
-	//float Output[samples];
-	//float Output2[samples];
 	float maxValue;
 	int maxIndex;
-	//arm_rfft_fast_instance_f32 S; /* ARM CFFT module */
 	arm_cfft_instance_f32 complexInst; /* ARM CFFT module */
 	arm_cfft_init_f32(&complexInst, samples);
 
 	float inputComplex[samples * 2];
 	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
-#if defined SIMULATION
-		inputComplex[i] = (float) (input[i]);
-#else
 		inputComplex[i] = (float) (ADC_samples[i]);
-#endif
 	}
 
 	filter_dc(inputComplex, (samples * 2));
 
 	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
 	arm_cmplx_mag_f32(inputComplex, output, samples);
-	//data = ADC_samples[MEAS_input_count*0] / f;
-	/*
-	 for (uint16_t i = 0; i < ADC_NUMS; i++){
-	 Input1[i] = (float)(ADC_samples[i*2]);
-	 //Input1[i+1] = 0;
-	 }
-	 */
-	/* Draw the  values of input channel 2 (if present) as a curve */
-	/*
-	 if (MEAS_input_count == 2) {
-	 for (uint16_t i = 0; i < ADC_NUMS; i++){
-	 Input2[i] = (float)(ADC_samples[i*2+1]);
-	 //Input2[i+1] = 0;
-	 }
-	 }*/
-	//uint32_t *ADC_samples = get_ADC_samples();
-//	for(int i = 0; i < (samples * 2); i += 2){
-//		/* Real part, make offset by ADC / 2 */
-//		Input1[(uint16_t)i] = (float)((ADC_samples[i/2] & 0xffff0000) >> 16);
-//		/* Imaginary part */
-//		Input1[(uint16_t)(i + 1)] = 0;
-//
-//		Input2[(uint16_t)i] = (float)(ADC_samples[i/2] & 0xffff);
-//		/* Imaginary part */
-//		Input2[(uint16_t)(i + 1)] = 0;
-//	}
-	/*
-	 * @n Both converted data from ADC1 and ADC2 are packed into a 32-bit register
-	 * in this way: <b> ADC_CDR[31:0] = ADC2_DR[15:0] | ADC1_DR[15:0] </b>*/
-	/* Initialize the CFFT/CIFFT module, intFlag = 0, doBitReverse = 1 */
-	//arm_rfft_fast_init_f32(&S, samples);
-	/* Process the data through the CFFT/CIFFT module */
-	//arm_rfft_fast_f32(&S, Input1, middle1, 0);
-	//arm_rfft_fast_f32(&S, Input2, middle2, 0);
-	/* Process the data through the Complex Magnitud-e Module for calculating the magnitude at each bin */
-	//arm_cmplx_mag_f32(middle1, result1, samples);
-	//arm_cmplx_mag_f32(middle2, result2, samples);
-	//result1 = Output1; //Attention, the start of the vectors are the same, but the length changes! to be tested!!!
-	//result2 = Output2;
-	/* Calculates maxValue and returns corresponding value */
 	arm_max_f32(output, samples, &maxValue, &maxIndex);
 	MEAS_show_data_spectrum(output, input, (uint32_t) maxValue, samples);
 	return maxValue;
-	//return 0;
 }
 
-void MEAS_show_data_spectrum(float spectrum[], uint32_t input[], uint32_t maxValue, int length) {
+void clear_display() {
+	const uint32_t Y_OFFSET = 260;
+	const uint32_t X_SIZE = 240;
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET + 1);
+}
+
+void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
+		uint32_t maxValue, int length) {
 	const uint32_t Y_OFFSET = 260;
 	const uint32_t X_SIZE = 240;
 	const uint32_t f = (1 << (ADC_DAC_RES + 3)) / Y_OFFSET + 1;	// Scaling factor
@@ -569,10 +523,10 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[], uint32_t maxVal
 	const uint32_t fspectrum = maxValue / Y_OFFSET_spectrum * 2;//(1 << 31) / Y_OFFSET_spectrum + 1;// Scaling factor
 	uint32_t data;
 	uint32_t data_last;
-	const int x_scale = 5;
+	const int x_scale = 20;
 	/* Clear the display */
-	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET + 1);
+	//BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	//BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET + 1);
 	/* Write first 2 samples as numbers */
 	BSP_LCD_SetFont(&Font24);
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
@@ -586,18 +540,10 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[], uint32_t maxVal
 	 */
 	/* Draw the  values of input channel 1 as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-#if defined SIMULATION
-	data = input[2 * 0] / f;
-#else
 	data = ADC_samples[2 * 0] / f;
-#endif
 	for (uint32_t i = 1; i < (240 / x_scale); i++) {
 		data_last = data;
-#if defined SIMULATION
-		data = (input[2 * i]) / f;
-#else
 		data = (ADC_samples[2 * i]) / f;
-#endif
 		if (data > Y_OFFSET) {
 			data = Y_OFFSET;
 		}	// Limit value, prevent crash
@@ -606,18 +552,10 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[], uint32_t maxVal
 	}
 	/* Draw the  values of input channel 2 (if present) as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_RED);
-#if defined SIMULATION
-	data = input[2 * 0 + 1] / f;
-#else
 	data = ADC_samples[2 * 0 + 1] / f;
-#endif
 	for (uint32_t i = 1; i < (240 / x_scale); i++) {
 		data_last = data;
-#if defined SIMULATION
-		data = (input[2 * i + 1]) / f;
-#else
 		data = (ADC_samples[2 * i + 1]) / f;
-#endif
 		if (data > Y_OFFSET) {
 			data = Y_OFFSET;
 		}	// Limit value, prevent crash
