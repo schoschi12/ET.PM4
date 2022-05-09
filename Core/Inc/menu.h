@@ -19,7 +19,7 @@
 /******************************************************************************
  * Defines
  *****************************************************************************/
-#define MENU_ENTRY_COUNT		6		///< Number of menu entries
+#define MENU_ENTRY_COUNT		3		///< Number of menu entries
 
 
 /******************************************************************************
@@ -42,7 +42,9 @@ typedef struct {
  * Functions
  *****************************************************************************/
 void MENU_draw(void);
+void MENU_draw_level_two(void);
 void MENU_hint(void);
+void prepare_display(void);
 void MENU_set_entry(const MENU_item_t item, const MENU_entry_t entry);
 MENU_entry_t MENU_get_entry(const MENU_item_t item);
 void MENU_check_transition(void);

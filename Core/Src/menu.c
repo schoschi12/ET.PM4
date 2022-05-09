@@ -45,14 +45,25 @@
  *****************************************************************************/
 static MENU_item_t MENU_transition = MENU_NONE;	///< Transition to this menu
 static MENU_entry_t MENU_entry[MENU_ENTRY_COUNT] = {
+		{"SPEED",	" ",		LCD_COLOR_BLACK,	LCD_COLOR_GREEN},
+		{"DISTANCE", " ",		LCD_COLOR_BLACK,	LCD_COLOR_MAGENTA},
+		{"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_RED}
+};										///< All the menu entries
+
+static MENU_entry_t MENU_entry_level_two[MENU_ENTRY_COUNT] = {
+		{"GAIN",	"on",		LCD_COLOR_BLACK,	LCD_COLOR_GREEN},
+		{"GAIN", "off",		LCD_COLOR_BLACK,	LCD_COLOR_MAGENTA},
+		{"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_RED}
+};
+
+/*static MENU_entry_t MENU_entry[MENU_ENTRY_COUNT] = {
 		{"FFT",		"show",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTBLUE},
 		{"speed",	"+meas",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTGREEN},
 		{"human",	"detect",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTRED},
 		{"DMA",	    "dual",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTCYAN},
 		{"DMA",	    "scan",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTMAGENTA},
 		{"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_LIGHTYELLOW}
-};										///< All the menu entries
-
+};*/
 
 /******************************************************************************
  * Functions
@@ -87,6 +98,27 @@ void MENU_draw(void)
 	}
 }
 
+void MENU_draw_level_two(void)
+{
+	BSP_LCD_SetFont(MENU_FONT);
+	uint32_t x, y, m, w, h;
+	y = MENU_Y;
+	m = MENU_MARGIN;
+	w = BSP_LCD_GetXSize()/MENU_ENTRY_COUNT;
+	h = MENU_HEIGHT;
+	for (uint32_t i = 0; i < MENU_ENTRY_COUNT; i++) {
+		x = i*w;
+		BSP_LCD_SetTextColor(MENU_entry[i].back_color);
+		BSP_LCD_FillRect(x+m, y+m, w-2*m, h-2*m);
+		BSP_LCD_SetBackColor(MENU_entry_level_two[i].back_color);
+		BSP_LCD_SetTextColor(MENU_entry_level_two[i].text_color);
+		BSP_LCD_DisplayStringAt(x+3*m, y+3*m,
+				(uint8_t *)MENU_entry_level_two[i].line1, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(x+3*m, y+h/2,
+				(uint8_t *)MENU_entry_level_two[i].line2, LEFT_MODE);
+	}
+}
+
 
 /** ***************************************************************************
  * @brief Shows a hint at startup.
@@ -97,14 +129,11 @@ void MENU_hint(void)
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(5,10, (uint8_t *)"DEMO-CODE", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(5,10, (uint8_t *)"Mobile Radar", LEFT_MODE);
 	BSP_LCD_SetFont(&Font16);
 	BSP_LCD_DisplayStringAt(5, 60, (uint8_t *)"Touch a menu item", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(5, 80, (uint8_t *)"to start an ADC demo", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(5, 110, (uint8_t *)"Switch DAC on/off", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(5, 130, (uint8_t *)"with blue pushbutton", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(5, 160, (uint8_t *)"(c) hhrt@zhaw.ch", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(5, 160, (uint8_t *)"Version 17.06.2021", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(5, 80, (uint8_t *)"Version 09.05.2022", LEFT_MODE);
+
 }
 
 
@@ -198,6 +227,23 @@ void MENU_check_transition(void)
 	}
 }
 
+/** ***************************************************************************
+ * @brief clear only the nessecary parts of the display
+ *****************************************************************************/
+void prepare_display(void) {
+
+	const uint32_t Y_OFFSET = 200;
+	const uint32_t X_SIZE = 240;
+
+	/* Clear the display */
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_FillRect(0, 0, X_SIZE, Y_OFFSET + 1 + 60);
+	/* Write first 2 samples as numbers */
+	MENU_draw();
+	BSP_LCD_SetFont(&Font24);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+}
 
 
 /** ***************************************************************************

@@ -34,6 +34,7 @@
 /******************************************************************************
  * Variables
  *****************************************************************************/
+static uint8_t menu_level = 1;
 
 /******************************************************************************
  * Functions
@@ -77,9 +78,9 @@ int main(void) {
 	GPIO_LED_init();
 
 	MEAS_GPIO_analog_init();			// Configure GPIOs in analog mode
-//	MEAS_timer_init(24000);					// Configure the timer
-//	DAC_init();
-//	tim_TIM7_TriangleWave(250);
+	//	MEAS_timer_init(24000);					// Configure the timer
+	//	DAC_init();
+	//	tim_TIM7_TriangleWave(250);
 	/*
 	 while (true) {
 	 measure_speed(false);
@@ -111,53 +112,66 @@ int main(void) {
 		/* Comment next line if touchscreen interrupt is enabled */
 		MENU_check_transition();
 
-		/*
-		 while (1) {
-		 init_range();
-		 measure_range();
-		 }
-		 */
 		switch (MENU_get_transition()) {	// Handle user menu choice
 		case MENU_NONE:					// No transition => do nothing
 			break;
-		case MENU_ZERO:
-			while (true) {
-				fft_showcase();
+		case MENU_ZERO: // Menu for Speed measurement
+			menu_level = 2;
+
+			init_speed();
+			MENU_draw_level_two();
+
+			while (menu_level == 2) {
+				switch (MENU_get_transition()) {	// Handle user menu choice
+				case MENU_NONE:					// No transition => do nothing
+					measure_speed(false);
+					HAL_Delay(50);
+					break;
+				case MENU_ZERO:
+					break;
+				case MENU_ONE:
+					break;
+				case MENU_TWO:
+					menu_level = 1;
+					prepare_display();
+					MENU_draw();						// Draw the menu
+					MENU_hint();						// Show hint at startup
+					break;
+				default:						// Should never occur
+					break;
+				}
+				MENU_check_transition();
 			}
 			break;
 		case MENU_ONE:
-			init_speed();
-			while (true) {
-				measure_speed(false);
-				HAL_Delay(50);
+			menu_level = 2;
+
+			init_range();
+			MENU_draw_level_two();
+
+			while (menu_level == 2) {
+				switch (MENU_get_transition()) {	// Handle user menu choice
+				case MENU_NONE:					// No transition => do nothing
+					measure_range();
+					HAL_Delay(50);
+					break;
+				case MENU_ZERO:
+					break;
+				case MENU_ONE:
+					break;
+				case MENU_TWO:
+					menu_level = 1;
+					prepare_display();
+					MENU_draw();						// Draw the menu
+					MENU_hint();						// Show hint at startup
+					break;
+				default:						// Should never occur
+					break;
+				}
+				MENU_check_transition();
 			}
-			//ADC3_IN4_timer_init();
-			//ADC3_IN4_timer_start();
 			break;
 		case MENU_TWO:
-			init_speed();
-			while (true) {
-				measure_speed(true);
-			}
-			break;
-		case MENU_THREE:
-			//artificial_signal(200, 16000, ADC_NUMS);
-			//float result1[0];
-			//complete_fft(16000, result1);
-			//ADC1_IN13_ADC2_IN5_dual_init();
-			//ADC1_IN13_ADC2_IN5_dual_start();
-			//ADC1_IN13_ADC2_IN5_dual_init();
-			//ADC1_IN13_ADC2_IN5_dual_start();
-			break;
-		case MENU_FOUR:
-			while (1) {
-				init_range();
-				measure_range();
-			}
-			break;
-		case MENU_FIVE:
-			//ADC3_IN13_IN4_scan_init();
-			//ADC3_IN13_IN4_scan_start();
 			break;
 		default:						// Should never occur
 			break;
