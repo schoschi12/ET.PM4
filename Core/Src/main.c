@@ -151,8 +151,8 @@ int main(void) {
 			break;
 		case MENU_FOUR:
 			while (1) {
-				init_range();
 				measure_range();
+				HAL_Delay(500);
 			}
 			break;
 		case MENU_FIVE:

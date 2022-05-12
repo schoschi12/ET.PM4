@@ -15,7 +15,6 @@
 
 #include "range.h"
 #include "measuring.h"
-#include "speed.h"
 #include "stm32f4xx.h"
 #include "stm32f429i_discovery.h"
 #include "stm32f4xx_hal_dac.h"
@@ -26,106 +25,70 @@
  * Defines
  *****************************************************************************/
 //#define SAMPLES			256
-#define B_SWEEP			260000		///<Bandwidth of VCO frequencyy
-#define LIGHTSPEED		299792458
-//#define T_SWEEP			1			///<Rise and fall time of triangle wave in ms!
-#define SAMPLING_RATE	16000		///<Sampling rate of ADC
 
 /******************************************************************************
  * Variables
  *****************************************************************************/
 
+DAC_HandleTypeDef DacHandle;
+DMA_HandleTypeDef hdma_dac_ch1;
 bool DAC_active = false;				///< DAC output active?
 bool upcounting = true;
-float fft1[ADC_NUMS];
-float fft2[ADC_NUMS];
-float df1;
-float df2;
-
-static uint32_t DAC_sample = 0;			///< DAC output value
-static float t_sweep = 0.001;
-static uint32_t state = 0;
+static uint32_t DAC_sample = 0;
+//TIM_HandleTypeDef htim2;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
-void init_range(void) {
-	MEAS_timer_init(SAMPLING_RATE);
+
+float range_from_frequency(double frequency_R) {
+	double dfdt = 2 * B_SWEEP * TRIANGLE_FREQ;
+	return LIGHTSPEED * frequency_R / dfdt; //Doppler devided by frequency change per time
 }
 
-void measure_range(void) {
-	float distance;
-	//float sum = 0.0f;
-	//float df1;
-	//float df2;
-	float frequency_speed;
-	float frquency_distance;
-
-	switch (state) {
-	case 0:
-		ADC1_IN13_ADC2_IN5_dual_init();
-		ADC1_IN13_ADC2_IN5_dual_start();
-		//tim_TIM7_TriangleWave(500);
-		tim_TIM7_TriangleWave_Start();
-		if (getStatus() == true) { //ramp up
-			state = 1;
+float measure_range(void) {
+	float spectrum_up[FFT_SIZE];
+	float spectrum_down[FFT_SIZE];
+	MEAS_timer_init(SAMPLING_RATE_RANGE);
+	ADC1_IN13_ADC2_IN5_dual_init(ADC_NUMS_RANGE, false);
+	tim_TIM7_TriangleWave(TRIANGLE_FREQ);
+	tim_TIM7_TriangleWave_Start();
+	ADC1_IN13_ADC2_IN5_dual_start();
+	while (MEAS_data_ready == false)
+		;
+	MEAS_data_ready = false;
+	complete_fft(FFT_SIZE, spectrum_up, ADC_NUMS_RANGE * 0.05);
+	complete_fft(FFT_SIZE, spectrum_down, ADC_NUMS_RANGE * 0.55);
+	double test = 0;
+	int index_up = 0;
+	for (int i = 1; i < FFT_SIZE / 2; i++) {
+		if ((double) spectrum_up[i] > test) {
+			test = (double) spectrum_up[i];
+			index_up = i;
 		}
-		break;
-	case 1:
-		//Sample frequency 16kHz, 256 Samples => 0.016s per measurement
-		//Triangle rising time = 1ms
-		//calculate mean value of samples during ramp up and down
-
-		while (MEAS_data_ready == false)
-			;
-		MEAS_data_ready = false;
-
-		df1 = complete_fft(ADC_NUMS, fft1);
-		state = 2;
-		break;
-	case 2:
-
-		if (getStatus() == false) { //ramp down
-			ADC1_IN13_ADC2_IN5_dual_init();
-			ADC1_IN13_ADC2_IN5_dual_start();
-			while (MEAS_data_ready == false)
-				;
-			MEAS_data_ready = false;
-
-			df2 = complete_fft(ADC_NUMS, fft2);
-			state = 0;
-			//showdata();
-
-			frquency_distance = (df1 + df2) / 2;
-			frequency_speed = abs(df1 - df2) / 2;
-
-			distance = (float) (LIGHTSPEED * abs(frquency_distance)
-					/ (2 * B_SWEEP / t_sweep));
-
-			char text[16];
-			BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-			BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-			BSP_LCD_SetFont(&Font24);
-
-			snprintf(text, 15, "Freq_raw %4dHz", (int) frquency_distance);
-			BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-			snprintf(text, 15, "Distance_raw %4dm", (int) distance);
-			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
-
-			//ADC1_IN13_ADC2_IN5_dual_stop();
-			//tim_TIM7_TriangleWave_Stop();
-			//DAC_reset();
-			//stopDAC();
-		}
-		break;
-	default:
-		state = 0;
-		//ADC1_IN13_ADC2_IN5_dual_stop();
-		//tim_TIM7_TriangleWave_Stop();
-		//DAC_reset();
 	}
-
-	//return distance;
+	test = 0;
+	int index_down = 0;
+	for (int i = 1; i < FFT_SIZE / 2; i++) {
+		if ((double) spectrum_down[i] > test) {
+			test = (double) spectrum_down[i];
+			index_down = i;
+		}
+	}
+	double f_1 = (double) index_up * 24000 / (double) 1024;
+	double f_2 = (double) index_down * 24000 / (double) 1024;
+	double frequency_R = (f_1 + f_2) / 2;
+	double frequency_S = (f_1 - f_2) / 2;
+	double range = range_from_frequency(frequency_R);
+	double speed = (frequency_S / 158 * 1000);
+	clear_display();
+	char text[16];
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	BSP_LCD_SetFont(&Font24);
+	snprintf(text, 15, "range %4dm", (int)range);
+	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*) text, LEFT_MODE);
+	return range;
 }
 
 /** ***************************************************************************
@@ -176,4 +139,61 @@ void DAC_increment(void) {
 
 bool getStatus(void) {
 	return upcounting;
+}
+
+
+
+/** ***************************************************************************
+ * @brief initialize timercounter 7 with variable frequency with interrupt
+ *
+ * Prescaler = 42e6/DAC_frequency/((4096/DAC_STEP_SIZE)*2)
+ *****************************************************************************/
+void tim_TIM7_TriangleWave(uint32_t DAC_frequency) {
+	//Enable TIM7 timer
+	RCC->APB1ENR |= RCC_APB1ENR_TIM7EN;
+	//1 Pulse mode enable
+	TIM7->CR1 &= ~(TIM_CR1_OPM);
+	//Mode --> RESET
+	TIM7->CR2 &= ~(TIM_CR2_MMS);
+
+	//Prescaler
+	TIM7->PSC = 42e6 / DAC_frequency / ((4096 / DAC_STEP_SIZE) * 2) - 1;
+	//Period
+	TIM7->ARR = 2 - 1; //42MHz
+
+	//Clear Update Interrupt
+	TIM7->SR &= ~(1UL << 0);
+	//Enable update interrupt
+	TIM7->DIER |= 0x01;
+	//Enable NVIC Interrupt
+	NVIC_EnableIRQ(TIM7_IRQn);
+
+}
+void tim_TIM7_TriangleWave_Start(void) {
+	//Start perodic timer
+	TIM7->CR1 |= 0x01;
+
+	//Activate DAC
+	DAC_active = true;
+}
+void tim_TIM7_TriangleWave_Stop(void) {
+	//Stop perodic timer
+	TIM7->CR1 &= ~(0x01);
+
+	//Deactivate DAC
+	DAC_active = false;
+}
+
+/** ***************************************************************************
+ * @brief interrupt service routine of timercounter 7. Occurs periodically and
+ * counts timer_value_ms up.
+ *****************************************************************************/
+void TIM7_IRQHandler(void) {
+	if (TIM7->SR & 0x01) {
+		TIM7->SR &= ~(1UL); //reset flag
+		if (DAC_active) {
+			DAC_increment();
+		}
+
+	}
 }

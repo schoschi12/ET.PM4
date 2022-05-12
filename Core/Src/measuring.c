@@ -74,6 +74,7 @@
 #define TIM_PRESCALE	(TIM_CLOCK/ADC_FS/(TIM_TOP+1)-1) ///< Clock prescaler
 #define IFFT_FLAG 0
 #define BIT_REVERSE_FLAG 1
+//#define adc_nums			1024 			///< Number of samples
 
 /******************************************************************************
  * Variables
@@ -81,9 +82,11 @@
 bool MEAS_data_ready = false;			///< New data is ready
 uint32_t MEAS_input_count = 1;			///< 1 or 2 input channels?
 
+static uint32_t adc_nums;
 static uint32_t ADC_sample_count = 0;	///< Index for buffer
-static uint32_t ADC_samples[2 * ADC_NUMS];///< ADC values of max. 2 input channels
-
+static uint32_t ADC_samples_speed[2 * ADC_NUMS_SPEED];
+static uint32_t ADC_samples_range[2 * ADC_NUMS_RANGE];//2 * adc_nums];///< ADC values of max. 2 input channels
+static bool speed = 1;
 int frequency_changer = 0;
 
 /******************************************************************************
@@ -263,7 +266,9 @@ void MEAS_timer_init(int adc_fs) {
  *****************************************************************************/
 
 //Zu ändern: auf PC1 statt PA5 und PC3
-void ADC1_IN13_ADC2_IN5_dual_init(void) {
+void ADC1_IN13_ADC2_IN5_dual_init(uint32_t nums, bool is_speed) {
+	adc_nums = nums;
+	speed = is_speed;
 	MEAS_input_count = 2;				// Only 1 input is converted
 	__HAL_RCC_ADC1_CLK_ENABLE();		// Enable Clock for ADC1
 	__HAL_RCC_ADC2_CLK_ENABLE();		// Enable Clock for ADC2
@@ -285,9 +290,13 @@ void ADC1_IN13_ADC2_IN5_dual_init(void) {
 	DMA2_Stream4->CR |= DMA_SxCR_PSIZE_1;	// Peripheral data size = 32 bit
 	DMA2_Stream4->CR |= DMA_SxCR_MINC;	// Increment memory address pointer
 	DMA2_Stream4->CR |= DMA_SxCR_TCIE;	// Transfer complete interrupt enable
-	DMA2_Stream4->NDTR = ADC_NUMS;		// Number of data items to transfer
+	DMA2_Stream4->NDTR = adc_nums;		// Number of data items to transfer
 	DMA2_Stream4->PAR = (uint32_t) &ADC->CDR;	// Peripheral register address
-	DMA2_Stream4->M0AR = (uint32_t) ADC_samples;// Buffer memory loc. address
+	if (speed) {
+		DMA2_Stream4->M0AR = (uint32_t) ADC_samples_speed;// Buffer memory loc. address
+	} else {
+		DMA2_Stream4->M0AR = (uint32_t) ADC_samples_range;// Buffer memory loc. address
+	}
 }
 
 /** ***************************************************************************
@@ -302,11 +311,12 @@ void ADC1_IN13_ADC2_IN5_dual_start(void) {
 	ADC1->CR2 |= ADC_CR2_ADON;			// Enable ADC1
 	ADC2->CR2 |= ADC_CR2_ADON;			// Enable ADC2
 	TIM2->CR1 |= TIM_CR1_CEN;			// Enable timer
-	while (MEAS_data_ready == false) {
-		//DAC_increment();
-		//printf("inc");
-		//HAL_Delay(1);
-	}
+	/*
+	 while (MEAS_data_ready == false) {
+	 //DAC_increment();
+	 //printf("inc");
+	 //HAL_Delay(1);
+	 }*/
 }
 
 /** ***************************************************************************
@@ -345,8 +355,12 @@ void TIM2_IRQHandler(void) {
  *****************************************************************************/
 void ADC_IRQHandler(void) {
 	if (ADC3->SR & ADC_SR_EOC) {		// Check if ADC3 end of conversion
-		ADC_samples[ADC_sample_count++] = ADC3->DR;	// Read input channel 1 only
-		if (ADC_sample_count >= ADC_NUMS) {		// Buffer full
+		if (speed) {
+			ADC_samples_speed[ADC_sample_count++] = ADC3->DR;// Read input channel 1 only
+		} else {
+			ADC_samples_range[ADC_sample_count++] = ADC3->DR;// Read input channel 1 only
+		}
+		if (ADC_sample_count >= adc_nums) {		// Buffer full
 			TIM2->CR1 &= ~TIM_CR1_CEN;	// Disable timer
 			ADC3->CR2 &= ~ADC_CR2_ADON;	// Disable ADC3
 			ADC_reset();
@@ -427,22 +441,17 @@ void DMA2_Stream4_IRQHandler(void) {
 		ADC2->CR2 &= ~ADC_CR2_ADON;		// Disable ADC2
 		ADC->CCR &= ~ADC_CCR_DMA_1;		// Disable DMA mode
 		/* Extract combined samples */
-		for (int32_t i = ADC_NUMS - 1; i >= 0; i--) {
-			ADC_samples[2 * i + 1] = (ADC_samples[i] >> 16);
-			ADC_samples[2 * i] = (ADC_samples[i] & 0xffff);
+		for (int32_t i = adc_nums - 1; i >= 0; i--) {
+			if (speed) {
+				ADC_samples_speed[2 * i + 1] = (ADC_samples_speed[i] >> 16);
+				ADC_samples_speed[2 * i] = (ADC_samples_speed[i] & 0xffff);
+			} else {
+				ADC_samples_range[2 * i + 1] = (ADC_samples_range[i] >> 16);
+				ADC_samples_range[2 * i] = (ADC_samples_range[i] & 0xffff);
+			}
 		}
 		ADC_reset();
 		MEAS_data_ready = true;
-	}
-}
-
-void fft_shift(float input[], float output[], int length) {
-	for (int i = 0; i < length; i++) {
-		if (i < (length / 2)) {
-			output[i] = input[i + ((length + 1) / 2)];
-		} else {
-			output[i] = input[i - (length / 2)];
-		}
 	}
 }
 
@@ -456,28 +465,32 @@ void filter_dc(float input[], int length) {
 	}
 }
 
-void artificial_signal(double freq, int sampling_rate, int samples,
-		uint32_t ADC_samples_arti[]) {
-	double real;
-	double imaginary;
-	//uint32_t ADC_samples_arti[2 * ADC_NUMS];
-	double real_array[ADC_NUMS];
-	double imaginary_array[ADC_NUMS];
-	double phi = 0;
-	double pi = 3.141592653589793;
-	for (int i = 0; i < samples; i++) {
-		real = (cos(freq * 2 * pi * i / sampling_rate))
-				* (1 << (ADC_DAC_RES - 1)) + 0x7FF;		//0xffff;
-		imaginary = (sin(freq * 2 * pi * i / sampling_rate))
-				* (1 << (ADC_DAC_RES - 1)) + 0x7FF;
-		real_array[i] = real;
-		imaginary_array[i] = imaginary;
-		ADC_samples_arti[2 * i] = (uint32_t) real;// = ((uint16_t)real << 16) + (uint16_t)imaginary;
-		ADC_samples_arti[2 * i + 1] = (uint32_t) imaginary;
-		ADC_samples[2 * i] = (uint32_t) real;
-		ADC_samples[2 * i + 1] = (uint32_t) imaginary;
+float get_average(float arr[], int length) {
+	float average = 0;
+	for (int i = 0; i < length; i++) {
+		average += arr[i];
 	}
-	uint16_t breaktest;
+	return average / length;
+}
+
+void high_pass(float input[], int length, int sample_size, int odd) {
+	float mov_array[sample_size];
+	int mov_array_index = 0;
+	for (int i = 0; i < sample_size; i++) {
+		mov_array[i] = input[i * 2 + odd];
+	}
+	for (int i = sample_size - 1; i < (length - sample_size + 2); i += 2) {
+		input[i + odd] = input[i + odd] - get_average(mov_array, sample_size);
+		mov_array[mov_array_index] = input[i + sample_size + 1 + odd];
+		mov_array_index++;
+		if (mov_array_index >= sample_size) {
+			mov_array_index = 0;
+		}
+	}
+	for (int i = 0; i <= sample_size / 2; i++) {
+		input[i * 2 + odd] = 0;
+		input[length - i * 2 - odd] = 0;
+	}
 }
 
 /**
@@ -486,24 +499,35 @@ void artificial_signal(double freq, int sampling_rate, int samples,
  * @param data contains the original data, with "samples" many samples
  * @param result will contain magnitude of frequencies. "samples" / 2 frequencies are returned.
  */
-float complete_fft(uint32_t samples, float output[]) {
-	uint32_t input[ADC_NUMS * 2];
+float complete_fft(uint32_t samples, float output[], int offset) {
+	uint32_t input[adc_nums * 2];
 	float maxValue;
 	int maxIndex;
 	arm_cfft_instance_f32 complexInst; /* ARM CFFT module */
 	arm_cfft_init_f32(&complexInst, samples);
+	if (!speed) {
 
-	float inputComplex[samples * 2];
-	for (uint16_t i = 0; i < (ADC_NUMS * 2); i++) {
-		inputComplex[i] = (float) (ADC_samples[i]);
 	}
-
+	float inputComplex[samples * 2];
+	for (uint16_t i = 0; i < (adc_nums * 2); i++) {
+		if (speed) {
+			inputComplex[i] = (float) (ADC_samples_speed[i]);
+		} else {
+			inputComplex[i] = (float) (ADC_samples_range[i + offset]);
+		}
+	}
 	filter_dc(inputComplex, (samples * 2));
+	if (!speed) {
+		//high_pass(inputComplex, (samples * 2), HIGHPASS_LENGTH, 0);
+		//high_pass(inputComplex, (samples * 2), HIGHPASS_LENGTH, 1);
+	}
 
 	arm_cfft_f32(&complexInst, inputComplex, IFFT_FLAG, BIT_REVERSE_FLAG);
 	arm_cmplx_mag_f32(inputComplex, output, samples);
 	arm_max_f32(output, samples, &maxValue, &maxIndex);
-	MEAS_show_data_spectrum(output, input, (uint32_t) maxValue, samples);
+	if (speed) {
+		MEAS_show_data_spectrum(output, input, (uint32_t) maxValue, samples);
+	}
 	return maxValue;
 }
 
@@ -540,10 +564,18 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 	 */
 	/* Draw the  values of input channel 1 as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-	data = ADC_samples[2 * 0] / f;
+	if (speed) {
+		data = ADC_samples_speed[2 * 0] / f;
+	} else {
+		data = ADC_samples_range[2 * 0] / f;
+	}
 	for (uint32_t i = 1; i < (240 / x_scale); i++) {
 		data_last = data;
-		data = (ADC_samples[2 * i]) / f;
+		if (speed) {
+			data = (ADC_samples_speed[2 * i]) / f;
+		} else {
+			data = (ADC_samples_range[2 * i]) / f;
+		}
 		if (data > Y_OFFSET) {
 			data = Y_OFFSET;
 		}	// Limit value, prevent crash
@@ -552,10 +584,18 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 	}
 	/* Draw the  values of input channel 2 (if present) as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_RED);
-	data = ADC_samples[2 * 0 + 1] / f;
+	if (speed) {
+		data = ADC_samples_speed[2 * 0] / f;
+	} else {
+		data = ADC_samples_range[2 * 0] / f;
+	}
 	for (uint32_t i = 1; i < (240 / x_scale); i++) {
 		data_last = data;
-		data = (ADC_samples[2 * i + 1]) / f;
+		if (speed) {
+			data = (ADC_samples_speed[2 * i + 1]) / f;
+		} else {
+			data = (ADC_samples_range[2 * i + 1]) / f;
+		}
 		if (data > Y_OFFSET) {
 			data = Y_OFFSET;
 		}	// Limit value, prevent crash
@@ -563,7 +603,7 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 				Y_OFFSET - data);
 	}
 
-	uint32_t spectrumData[ADC_NUMS];
+	uint32_t spectrumData[adc_nums];
 	BSP_LCD_SetTextColor(LCD_COLOR_LIGHTMAGENTA);
 	data = ((uint32_t) spectrum[0]) / fspectrum;
 	spectrumData[0] = data;
@@ -579,9 +619,14 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 	}
 
 	/* Clear buffer and flag */
-	for (uint32_t i = 0; i < ADC_NUMS; i++) {
-		ADC_samples[2 * i] = 0;
-		ADC_samples[2 * i + 1] = 0;
+	for (uint32_t i = 0; i < adc_nums; i++) {
+		if (speed) {
+			ADC_samples_speed[2 * i] = 0;
+			ADC_samples_speed[2 * i + 1] = 0;
+		} else {
+			ADC_samples_range[2 * i] = 0;
+			ADC_samples_range[2 * i + 1] = 0;
+		}
 	}
 	ADC_sample_count = 0;
 }
@@ -592,7 +637,6 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
  * and write the first two samples as numbers.
  * @n After drawing, the buffer is cleared to get ready for the next run.
  * @note Drawing outside of the display crashes the system!
- * @todo Create new .h and .c files for calculating and displaying
  * of signals and results.
  * The code of this function was put into the same file for debugging purposes
  * and should be moved to a separate file in the final version
@@ -612,16 +656,26 @@ void MEAS_show_data(void) {
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	char text[16];
-	snprintf(text, 15, "1. sample %4d", (int) (ADC_samples[0]));
-	BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-	snprintf(text, 15, "2. sample %4d", (int) (ADC_samples[1]));
-	BSP_LCD_DisplayStringAt(0, 80, (uint8_t*) text, LEFT_MODE);
+	/*
+	 snprintf(text, 15, "1. sample %4d", (int) (ADC_samples[0]));
+	 BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+	 snprintf(text, 15, "2. sample %4d", (int) (ADC_samples[1]));
+	 BSP_LCD_DisplayStringAt(0, 80, (uint8_t*) text, LEFT_MODE);
+	 */
 	/* Draw the  values of input channel 1 as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-	data = ADC_samples[MEAS_input_count * 0] / f;
-	for (uint32_t i = 1; i < ADC_NUMS; i++) {
+	if (speed) {
+		data = ADC_samples_speed[2 * 0] / f;
+	} else {
+		data = ADC_samples_range[2 * 0] / f;
+	}
+	for (uint32_t i = 1; i < adc_nums; i++) {
 		data_last = data;
-		data = (ADC_samples[MEAS_input_count * i]) / f;
+		if (speed) {
+			data = (ADC_samples_speed[MEAS_input_count * i + 1]) / f;
+		} else {
+			data = (ADC_samples_range[MEAS_input_count * i + 1]) / f;
+		}
 		if (data > Y_OFFSET) {
 			data = Y_OFFSET;
 		}	// Limit value, prevent crash
@@ -631,10 +685,18 @@ void MEAS_show_data(void) {
 	/* Draw the  values of input channel 2 (if present) as a curve */
 	if (MEAS_input_count == 2) {
 		BSP_LCD_SetTextColor(LCD_COLOR_RED);
-		data = ADC_samples[MEAS_input_count * 0 + 1] / f;
-		for (uint32_t i = 1; i < ADC_NUMS; i++) {
+		if (speed) {
+			data = (ADC_samples_speed[MEAS_input_count + 1]) / f;
+		} else {
+			data = (ADC_samples_range[MEAS_input_count + 1]) / f;
+		}
+		for (uint32_t i = 1; i < adc_nums; i++) {
 			data_last = data;
-			data = (ADC_samples[MEAS_input_count * i + 1]) / f;
+			if (speed) {
+				data = (ADC_samples_speed[MEAS_input_count * i + 1]) / f;
+			} else {
+				data = (ADC_samples_range[MEAS_input_count * i + 1]) / f;
+			}
 			if (data > Y_OFFSET) {
 				data = Y_OFFSET;
 			}	// Limit value, prevent crash
@@ -643,9 +705,14 @@ void MEAS_show_data(void) {
 		}
 	}
 	/* Clear buffer and flag */
-	for (uint32_t i = 0; i < ADC_NUMS; i++) {
-		ADC_samples[2 * i] = 0;
-		ADC_samples[2 * i + 1] = 0;
+	for (uint32_t i = 0; i < adc_nums; i++) {
+		if (speed) {
+			ADC_samples_speed[2 * i] = 0;
+			ADC_samples_speed[2 * i + 1] = 0;
+		} else {
+			ADC_samples_range[2 * i] = 0;
+			ADC_samples_range[2 * i + 1] = 0;
+		}
 	}
 	ADC_sample_count = 0;
 }
