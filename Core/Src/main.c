@@ -81,6 +81,7 @@ int main(void) {
 	//	MEAS_timer_init(24000);					// Configure the timer
 	//	DAC_init();
 	//	tim_TIM7_TriangleWave(250);
+	//	tim_TIM7_TriangleWave_Start();
 	/*
 	 while (true) {
 	 measure_speed(false);
@@ -128,8 +129,10 @@ int main(void) {
 					HAL_Delay(50);
 					break;
 				case MENU_ZERO:
+					GPIO_set_gain();
 					break;
 				case MENU_ONE:
+					GPIO_reset_gain();
 					break;
 				case MENU_TWO:
 					menu_level = 1;

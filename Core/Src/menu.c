@@ -97,7 +97,13 @@ void MENU_draw(void)
 				(uint8_t *)MENU_entry[i].line2, LEFT_MODE);
 	}
 }
-
+/** ***************************************************************************
+ * @brief Draw the menu onto the display.
+ *
+ * Each menu entry has two lines.
+ * Text and background colors are applied.
+ * @n These attributes are defined in the variable MENU_draw_level_two[].
+ *****************************************************************************/
 void MENU_draw_level_two(void)
 {
 	BSP_LCD_SetFont(MENU_FONT);
