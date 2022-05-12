@@ -129,8 +129,8 @@ void GPIO_Amplifier_init(void) {
  * - Q(t) = PE01
  *****************************************************************************/
 void GPIO_set_gain(void) {
-	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
 }
 
 /** ***************************************************************************
@@ -141,8 +141,8 @@ void GPIO_set_gain(void) {
  * - Q(t) = PE01
  *****************************************************************************/
 void GPIO_reset_gain(void) {
-	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
 /** ***************************************************************************
