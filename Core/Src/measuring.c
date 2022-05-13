@@ -563,6 +563,7 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 	 BSP_LCD_DisplayStringAt(0, 80, (uint8_t*) text, LEFT_MODE);
 	 */
 	/* Draw the  values of input channel 1 as a curve */
+	/*
 	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
 	if (speed) {
 		data = ADC_samples_speed[2 * 0] / f;
@@ -582,7 +583,6 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 		BSP_LCD_DrawLine(x_scale * (i - 1), Y_OFFSET - data_last, x_scale * i,
 				Y_OFFSET - data);
 	}
-	/* Draw the  values of input channel 2 (if present) as a curve */
 	BSP_LCD_SetTextColor(LCD_COLOR_RED);
 	if (speed) {
 		data = ADC_samples_speed[2 * 0] / f;
@@ -602,6 +602,7 @@ void MEAS_show_data_spectrum(float spectrum[], uint32_t input[],
 		BSP_LCD_DrawLine(x_scale * (i - 1), Y_OFFSET - data_last, x_scale * i,
 				Y_OFFSET - data);
 	}
+	*/
 
 	uint32_t spectrumData[adc_nums];
 	BSP_LCD_SetTextColor(LCD_COLOR_LIGHTMAGENTA);

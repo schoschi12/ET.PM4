@@ -125,8 +125,10 @@ int main(void) {
 			while (menu_level == 2) {
 				switch (MENU_get_transition()) {	// Handle user menu choice
 				case MENU_NONE:					// No transition => do nothing
+					//GPIO_set_gain();
 					measure_speed(false);
-					HAL_Delay(50);
+					//GPIO_reset_gain();
+					//HAL_Delay(50);
 					break;
 				case MENU_ZERO:
 					GPIO_set_gain();
@@ -149,7 +151,7 @@ int main(void) {
 		case MENU_ONE:
 			menu_level = 2;
 
-			init_range();
+			//init_range();
 			MENU_draw_level_two();
 
 			while (menu_level == 2) {

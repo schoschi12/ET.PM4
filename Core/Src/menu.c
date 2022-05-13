@@ -34,7 +34,7 @@
  * Defines
  *****************************************************************************/
 #define MENU_FONT				&Font12	///< Possible font sizes: 8 12 16 20 24
-#define MENU_HEIGHT				40		///< Height of menu bar
+#define MENU_HEIGHT				60		///< Height of menu bar
 #define MENU_MARGIN				2		///< Margin around a menu entry
 /** Position of menu bar: 0 = top, (BSP_LCD_GetYSize()-MENU_HEIGHT) = bottom */
 #define MENU_Y					(BSP_LCD_GetYSize()-MENU_HEIGHT)

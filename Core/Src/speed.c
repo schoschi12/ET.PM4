@@ -21,7 +21,7 @@
 /******************************************************************************
  * Defines
  *****************************************************************************/
-#define FILTER_LENGTH	9
+#define FILTER_LENGTH	5
 /******************************************************************************
  * Variables
  *****************************************************************************/
@@ -31,6 +31,8 @@ double medianArr[FILTER_LENGTH];
 double freqArr[FILTER_LENGTH];
 double speed = 0;
 double speed_shift = 0;
+double speed2 = 0;
+double speed2_shift = 0;
 /******************************************************************************
  * Functions
  *****************************************************************************/
@@ -71,7 +73,6 @@ void bubbleSort(double arr[], int n) {
 }
 
 float measure_speed(bool human_detection) {
-	float maxValue;
 	float spectrum[ADC_NUMS_SPEED];
 	meanValue = 0.0;
 	for (int j = 0; j < FILTER_LENGTH; j++) {
@@ -82,30 +83,64 @@ float measure_speed(bool human_detection) {
 			;
 		MEAS_data_ready = false;
 
-		maxValue = complete_fft(ADC_NUMS_SPEED, spectrum, 0);
-		double test = 0;
-		int index;
-		for (int i = 0; i < (ADC_NUMS_SPEED); i++) {
-			if ((double) spectrum[i] > test) {
-				test = (double) spectrum[i];
-				index = i;
+		double maxValue = complete_fft(ADC_NUMS_SPEED, spectrum, 0);
+		double totalAmplitude = 0;
+		double cutAmplitude = 0;
+		double factor = 0.3;
+		double factor2 = 15;
+		int index1 = 0;
+		int index2 = 0;
+		int totalIndex;
+		int cutIndex = -1;
+		int cutter = 50;
+		/*
+		 for (int i = 0; i < ADC_NUMS_SPEED; i++) {
+		 if ((double) spectrum[i] > totalAmplitude) {
+		 totalAmplitude = (double) spectrum[i];
+		 index = i;
+		 }
+		 }*/
+		double spectrumAverage = 0;
+		for (int i = cutter; i < (ADC_NUMS_SPEED - cutter); i++) {
+			if ((double) spectrum[i] > cutAmplitude) {
+				cutAmplitude = (double) spectrum[i];
+				cutIndex = i;
 			}
+			spectrumAverage += spectrum[i] / (ADC_NUMS_SPEED - (2 * cutter));
+		}
+		if (cutAmplitude > (maxValue * factor)) {
+			index1 = cutIndex;
+		}
+
+		if (cutAmplitude > (factor2 * spectrumAverage)) {
+			index2 = cutIndex;
 		}
 
 		if (human_detection) {
 			//measure_human_detection(ADC_NUMS_SPEED, fft1);
 		} else {
 
-			double freq = (double) index * SAMPLING_RATE_SPEED
+			double freq = (double) index1 * SAMPLING_RATE_SPEED
 					/ (double) ADC_NUMS_SPEED;
 			double freq_shift;
-			if (index < ADC_NUMS_SPEED / 2) {
+			double freq2 = (double) index2 * SAMPLING_RATE_SPEED
+					/ (double) ADC_NUMS_SPEED;
+			double freq2_shift;
+			if (index1 < ADC_NUMS_SPEED / 2) {
 				freq_shift = freq;
 			} else {
 				freq_shift = freq - 16000;
 			}
+			if (index2 < ADC_NUMS_SPEED / 2) {
+				freq2_shift = freq2;
+			} else {
+				freq2_shift = freq2 - 16000;
+			}
 			speed = freq / 158;
 			speed_shift = freq_shift / 158;
+			speed2 = freq2 / 158;
+			speed2_shift = freq2_shift / 158;
+
 			freqArr[j] = freq_shift;
 			medianArr[j] = speed_shift;
 			meanValue += speed_shift;
@@ -122,6 +157,7 @@ float measure_speed(bool human_detection) {
 		median = medianArr[FILTER_LENGTH / 2];
 	}
 	//	medianValues /= ((double) FILTER_LENGTH);
+
 	clear_display();
 	char text[16];
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
@@ -133,11 +169,14 @@ float measure_speed(bool human_detection) {
 	//		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
 	//		snprintf(text, 15, "F_shift %4dHz", (int) freq_shift);
 	//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
-	snprintf(text, 15, "Sp. %4dmm/s", (int) (median * 1000));
+	snprintf(text, 15, "Speed:");
 	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*) text, LEFT_MODE);
-
+	snprintf(text, 15, "med%d: %.2fm/s", FILTER_LENGTH, median);
+	BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
+	snprintf(text, 15, "relAvg: %.2fm/s", speed2_shift);
+	BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
 	//medianValues = 0;
-	return median;
+	return 0;	//median;
 }
 
 void fft_showcase() {
