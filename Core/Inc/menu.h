@@ -49,6 +49,10 @@ void MENU_set_entry(const MENU_item_t item, const MENU_entry_t entry);
 MENU_entry_t MENU_get_entry(const MENU_item_t item);
 void MENU_check_transition(void);
 MENU_item_t MENU_get_transition(void);
+void set_menu_off(void);
+void set_menu_on(void);
+void set_menu_car(void);
+void set_menu_human(void);
 
 
 #endif

@@ -16,7 +16,6 @@
  * @date	30.04.2020
  *****************************************************************************/
 
-
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -29,7 +28,6 @@
 
 #include "menu.h"
 
-
 /******************************************************************************
  * Defines
  *****************************************************************************/
@@ -39,37 +37,98 @@
 /** Position of menu bar: 0 = top, (BSP_LCD_GetYSize()-MENU_HEIGHT) = bottom */
 #define MENU_Y					(BSP_LCD_GetYSize()-MENU_HEIGHT)
 
-
 /******************************************************************************
  * Variables
  *****************************************************************************/
 static MENU_item_t MENU_transition = MENU_NONE;	///< Transition to this menu
-static MENU_entry_t MENU_entry[MENU_ENTRY_COUNT] = {
-		{"SPEED",	" ",		LCD_COLOR_BLACK,	LCD_COLOR_GREEN},
-		{"DISTANCE", " ",		LCD_COLOR_BLACK,	LCD_COLOR_MAGENTA},
-		{"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_RED}
-};										///< All the menu entries
+static MENU_entry_t MENU_entry[MENU_ENTRY_COUNT] = { { "SPEED", " ",
+		LCD_COLOR_BLACK, LCD_COLOR_GREEN }, { "DISTANCE", " ", LCD_COLOR_BLACK,
+		LCD_COLOR_MAGENTA }, { "BACK", " ", LCD_COLOR_BLACK, LCD_COLOR_RED } };	///< All the menu entries
 
-static MENU_entry_t MENU_entry_level_two[MENU_ENTRY_COUNT] = {
-		{"GAIN",	"on",		LCD_COLOR_BLACK,	LCD_COLOR_GREEN},
-		{"GAIN", "off",		LCD_COLOR_BLACK,	LCD_COLOR_MAGENTA},
-		{"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_RED}
-};
+static MENU_entry_t MENU_entry_level_two[MENU_ENTRY_COUNT] = { { "GAIN:", "OFF",
+		LCD_COLOR_BLACK, LCD_COLOR_GREEN }, { "Mode:", "HUMAN", LCD_COLOR_BLACK,
+		LCD_COLOR_MAGENTA }, { "BACK", " ", LCD_COLOR_BLACK, LCD_COLOR_RED } };
 
 /*static MENU_entry_t MENU_entry[MENU_ENTRY_COUNT] = {
-		{"FFT",		"show",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTBLUE},
-		{"speed",	"+meas",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTGREEN},
-		{"human",	"detect",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTRED},
-		{"DMA",	    "dual",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTCYAN},
-		{"DMA",	    "scan",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTMAGENTA},
-		{"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_LIGHTYELLOW}
-};*/
+ {"FFT",		"show",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTBLUE},
+ {"speed",	"+meas",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTGREEN},
+ {"human",	"detect",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTRED},
+ {"DMA",	    "dual",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTCYAN},
+ {"DMA",	    "scan",		LCD_COLOR_BLACK,	LCD_COLOR_LIGHTMAGENTA},
+ {"BACK",	 " ",	LCD_COLOR_BLACK,	LCD_COLOR_LIGHTYELLOW}
+ };*/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
+void set_menu_off(void) {
+	BSP_LCD_SetFont(MENU_FONT);
+	uint32_t y, m, w, h;
+	y = MENU_Y;
+	m = MENU_MARGIN;
+	w = BSP_LCD_GetXSize() / MENU_ENTRY_COUNT;
+	h = MENU_HEIGHT;
+	BSP_LCD_SetTextColor(MENU_entry[0].back_color);
+	BSP_LCD_FillRect(m, y + m, w - 2 * m, h - 2 * m);
+	BSP_LCD_SetBackColor(MENU_entry_level_two[0].back_color);
+	BSP_LCD_SetTextColor(MENU_entry_level_two[0].text_color);
+	BSP_LCD_DisplayStringAt(3 * m, y + 3 * m,
+			(uint8_t*) MENU_entry_level_two[0].line1, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(3 * m, y + h / 2,
+			(uint8_t*) "OFF", LEFT_MODE);
+}
+void set_menu_on(void) {
+	BSP_LCD_SetFont(MENU_FONT);
+	uint32_t y, m, w, h;
+	y = MENU_Y;
+	m = MENU_MARGIN;
+	w = BSP_LCD_GetXSize() / MENU_ENTRY_COUNT;
+	h = MENU_HEIGHT;
+	BSP_LCD_SetTextColor(MENU_entry[0].back_color);
+	BSP_LCD_FillRect(m, y + m, w - 2 * m, h - 2 * m);
+	BSP_LCD_SetBackColor(MENU_entry_level_two[0].back_color);
+	BSP_LCD_SetTextColor(MENU_entry_level_two[0].text_color);
+	BSP_LCD_DisplayStringAt(3 * m, y + 3 * m,
+			(uint8_t*) MENU_entry_level_two[0].line1, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(3 * m, y + h / 2,
+			(uint8_t*) "ON", LEFT_MODE);
 
+}
+void set_menu_car(void) {
+	BSP_LCD_SetFont(MENU_FONT);
+	uint32_t y, m, w, h;
+	y = MENU_Y;
+	m = MENU_MARGIN;
+	w = BSP_LCD_GetXSize() / MENU_ENTRY_COUNT;
+	h = MENU_HEIGHT;
+	BSP_LCD_SetTextColor(MENU_entry[1].back_color);
+	BSP_LCD_FillRect(w + m, y + m, w - 2 * m, h - 2 * m);
+	BSP_LCD_SetBackColor(MENU_entry_level_two[1].back_color);
+	BSP_LCD_SetTextColor(MENU_entry_level_two[1].text_color);
+	BSP_LCD_DisplayStringAt(w + 3 * m, y + 3 * m,
+			(uint8_t*) MENU_entry_level_two[1].line1, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(w + 3 * m, y + h / 2,
+			(uint8_t*) "CAR", LEFT_MODE);
+
+}
+void set_menu_human(void) {
+	BSP_LCD_SetFont(MENU_FONT);
+	uint32_t y, m, w, h;
+	y = MENU_Y;
+	m = MENU_MARGIN;
+	w = BSP_LCD_GetXSize() / MENU_ENTRY_COUNT;
+	h = MENU_HEIGHT;
+	BSP_LCD_SetTextColor(MENU_entry[1].back_color);
+	BSP_LCD_FillRect(w + m, y + m, w - 2 * m, h - 2 * m);
+	BSP_LCD_SetBackColor(MENU_entry_level_two[1].back_color);
+	BSP_LCD_SetTextColor(MENU_entry_level_two[1].text_color);
+	BSP_LCD_DisplayStringAt(w + 3 * m, y + 3 * m,
+			(uint8_t*) MENU_entry_level_two[1].line1, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(w + 3 * m, y + h / 2,
+			(uint8_t*) "HUMAN", LEFT_MODE);
+
+}
 /** ***************************************************************************
  * @brief Draw the menu onto the display.
  *
@@ -77,24 +136,23 @@ static MENU_entry_t MENU_entry_level_two[MENU_ENTRY_COUNT] = {
  * Text and background colors are applied.
  * @n These attributes are defined in the variable MENU_draw[].
  *****************************************************************************/
-void MENU_draw(void)
-{
+void MENU_draw(void) {
 	BSP_LCD_SetFont(MENU_FONT);
 	uint32_t x, y, m, w, h;
 	y = MENU_Y;
 	m = MENU_MARGIN;
-	w = BSP_LCD_GetXSize()/MENU_ENTRY_COUNT;
+	w = BSP_LCD_GetXSize() / MENU_ENTRY_COUNT;
 	h = MENU_HEIGHT;
 	for (uint32_t i = 0; i < MENU_ENTRY_COUNT; i++) {
-		x = i*w;
+		x = i * w;
 		BSP_LCD_SetTextColor(MENU_entry[i].back_color);
-		BSP_LCD_FillRect(x+m, y+m, w-2*m, h-2*m);
+		BSP_LCD_FillRect(x + m, y + m, w - 2 * m, h - 2 * m);
 		BSP_LCD_SetBackColor(MENU_entry[i].back_color);
 		BSP_LCD_SetTextColor(MENU_entry[i].text_color);
-		BSP_LCD_DisplayStringAt(x+3*m, y+3*m,
-				(uint8_t *)MENU_entry[i].line1, LEFT_MODE);
-		BSP_LCD_DisplayStringAt(x+3*m, y+h/2,
-				(uint8_t *)MENU_entry[i].line2, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(x + 3 * m, y + 3 * m,
+				(uint8_t*) MENU_entry[i].line1, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(x + 3 * m, y + h / 2,
+				(uint8_t*) MENU_entry[i].line2, LEFT_MODE);
 	}
 }
 /** ***************************************************************************
@@ -104,44 +162,40 @@ void MENU_draw(void)
  * Text and background colors are applied.
  * @n These attributes are defined in the variable MENU_draw_level_two[].
  *****************************************************************************/
-void MENU_draw_level_two(void)
-{
+void MENU_draw_level_two(void) {
 	BSP_LCD_SetFont(MENU_FONT);
 	uint32_t x, y, m, w, h;
 	y = MENU_Y;
 	m = MENU_MARGIN;
-	w = BSP_LCD_GetXSize()/MENU_ENTRY_COUNT;
+	w = BSP_LCD_GetXSize() / MENU_ENTRY_COUNT;
 	h = MENU_HEIGHT;
 	for (uint32_t i = 0; i < MENU_ENTRY_COUNT; i++) {
-		x = i*w;
+		x = i * w;
 		BSP_LCD_SetTextColor(MENU_entry[i].back_color);
-		BSP_LCD_FillRect(x+m, y+m, w-2*m, h-2*m);
+		BSP_LCD_FillRect(x + m, y + m, w - 2 * m, h - 2 * m);
 		BSP_LCD_SetBackColor(MENU_entry_level_two[i].back_color);
 		BSP_LCD_SetTextColor(MENU_entry_level_two[i].text_color);
-		BSP_LCD_DisplayStringAt(x+3*m, y+3*m,
-				(uint8_t *)MENU_entry_level_two[i].line1, LEFT_MODE);
-		BSP_LCD_DisplayStringAt(x+3*m, y+h/2,
-				(uint8_t *)MENU_entry_level_two[i].line2, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(x + 3 * m, y + 3 * m,
+				(uint8_t*) MENU_entry_level_two[i].line1, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(x + 3 * m, y + h / 2,
+				(uint8_t*) MENU_entry_level_two[i].line2, LEFT_MODE);
 	}
 }
-
 
 /** ***************************************************************************
  * @brief Shows a hint at startup.
  *
  *****************************************************************************/
-void MENU_hint(void)
-{
+void MENU_hint(void) {
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_DisplayStringAt(5,10, (uint8_t *)"Mobile Radar", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(5, 10, (uint8_t*) "Mobile Radar", LEFT_MODE);
 	BSP_LCD_SetFont(&Font16);
-	BSP_LCD_DisplayStringAt(5, 60, (uint8_t *)"Touch a menu item", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(5, 80, (uint8_t *)"Version 09.05.2022", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(5, 60, (uint8_t*) "Touch a menu item", LEFT_MODE);
+	BSP_LCD_DisplayStringAt(5, 80, (uint8_t*) "Version 09.05.2022", LEFT_MODE);
 
 }
-
 
 /** ***************************************************************************
  * @brief Set a menu entry.
@@ -150,28 +204,24 @@ void MENU_hint(void)
  *
  * @note Call MENU_draw() to update the display.
  *****************************************************************************/
-void MENU_set_entry(const MENU_item_t item, const MENU_entry_t entry)
-{
+void MENU_set_entry(const MENU_item_t item, const MENU_entry_t entry) {
 	if ((0 <= item) && (MENU_ENTRY_COUNT > item)) {
 		MENU_entry[item] = entry;
 	}
 }
-
 
 /** ***************************************************************************
  * @brief Get a menu entry.
  * @param [in] item number of menu bar
  * @return Menu_entry[item] or Menu_entry[0] if item not in range
  *****************************************************************************/
-MENU_entry_t MENU_get_entry(const MENU_item_t item)
-{
+MENU_entry_t MENU_get_entry(const MENU_item_t item) {
 	MENU_entry_t entry = MENU_entry[0];
 	if ((0 <= item) && (MENU_ENTRY_COUNT > item)) {
 		entry = MENU_entry[item];
 	}
 	return entry;
 }
-
 
 /** ***************************************************************************
  * @brief Get menu selection/transition
@@ -182,13 +232,11 @@ MENU_entry_t MENU_get_entry(const MENU_item_t item)
  * When the value is read by calling MENU_get_transition()
  * this flag is cleared, respectively set to MENU_NONE.
  *****************************************************************************/
-MENU_item_t MENU_get_transition(void)
-{
+MENU_item_t MENU_get_transition(void) {
 	MENU_item_t item = MENU_transition;
 	MENU_transition = MENU_NONE;
 	return item;
 }
-
 
 /** ***************************************************************************
  * @brief Check for selection/transition
@@ -200,11 +248,10 @@ MENU_item_t MENU_get_transition(void)
  * in the touch controller compared to the display.
  * Uncomment or comment the <b>\#define EVAL_REV_E</b> in main.h accordingly.
  *****************************************************************************/
-void MENU_check_transition(void)
-{
+void MENU_check_transition(void) {
 	static MENU_item_t item_old = MENU_NONE;
 	static MENU_item_t item_new = MENU_NONE;
-	static TS_StateTypeDef  TS_State;	// State of the touch controller
+	static TS_StateTypeDef TS_State;	// State of the touch controller
 	BSP_TS_GetState(&TS_State);			// Get the state
 #ifdef EVAL_REV_E
 // Evalboard revision E (blue) has an inverted y-axis in the touch controller
@@ -216,9 +263,9 @@ void MENU_check_transition(void)
 		if (MENU_NONE == MENU_transition) {
 			item_old = item_new;		// Store old item
 			/* If touched within the menu bar? */
-			if ((MENU_Y < TS_State.Y) && (MENU_Y+MENU_HEIGHT > TS_State.Y)) {
+			if ((MENU_Y < TS_State.Y) && (MENU_Y + MENU_HEIGHT > TS_State.Y)) {
 				item_new = TS_State.X	// Calculate new item
-						/ (BSP_LCD_GetXSize()/MENU_ENTRY_COUNT);
+				/ (BSP_LCD_GetXSize() / MENU_ENTRY_COUNT);
 				if ((0 > item_new) || (MENU_ENTRY_COUNT <= item_new)) {
 					item_new = MENU_NONE;	// Out of bounds
 				}
@@ -228,7 +275,7 @@ void MENU_check_transition(void)
 				}
 			}
 		}
-	}else{
+	} else {
 		BSP_LED_Off(LED4);
 	}
 }
@@ -251,7 +298,6 @@ void prepare_display(void) {
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 }
 
-
 /** ***************************************************************************
  * @brief Interrupt handler for the touchscreen
  *
@@ -264,8 +310,7 @@ void prepare_display(void) {
  * The touchscreen interrupt is connected to PA15.
  * @n The interrupt handler for external line 15 to 10 is called.
  *****************************************************************************/
-void EXTI15_10_IRQHandler(void)
-{
+void EXTI15_10_IRQHandler(void) {
 	if (EXTI->PR & EXTI_PR_PR15) {		// Check if interrupt on touchscreen
 		EXTI->PR |= EXTI_PR_PR15;		// Clear pending interrupt on line 15
 		if (BSP_TS_ITGetStatus()) {		// Get interrupt status

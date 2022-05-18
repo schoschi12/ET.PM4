@@ -72,7 +72,7 @@ void bubbleSort(double arr[], int n) {
 				swap(&arr[j], &arr[j + 1]);
 }
 
-float measure_speed(bool human_detection) {
+float measure_speed(bool human_detection, bool human_set) {
 	float spectrum[ADC_NUMS_SPEED];
 	meanValue = 0.0;
 	for (int j = 0; j < FILTER_LENGTH; j++) {
@@ -100,26 +100,52 @@ float measure_speed(bool human_detection) {
 		 index = i;
 		 }
 		 }*/
-		double spectrumAverage = 0;
-		for (int i = cutter; i < (ADC_NUMS_SPEED - cutter); i++) {
-			if ((double) spectrum[i] > cutAmplitude) {
-				cutAmplitude = (double) spectrum[i];
-				cutIndex = i;
+		if (human_set) {
+			ADC1_IN13_ADC2_IN5_dual_init(ADC_NUMS_SPEED, true);
+			ADC1_IN13_ADC2_IN5_dual_start();
+			while (MEAS_data_ready == false)
+				;
+			MEAS_data_ready = false;
+
+			maxValue = complete_fft(ADC_NUMS_SPEED, spectrum, 0);
+			double test = 0;
+			int index;
+			for (int i = 0; i < (ADC_NUMS_SPEED); i++) {
+				if ((double) spectrum[i] > test) {
+					test = (double) spectrum[i];
+					index = i;
+				}
 			}
-			spectrumAverage += spectrum[i] / (ADC_NUMS_SPEED - (2 * cutter));
-		}
-		if (cutAmplitude > (maxValue * factor)) {
-			index1 = cutIndex;
-		}
-
-		if (cutAmplitude > (factor2 * spectrumAverage)) {
-			index2 = cutIndex;
-		}
-
-		if (human_detection) {
-			//measure_human_detection(ADC_NUMS_SPEED, fft1);
+			double freq = (double) index * SAMPLING_RATE_SPEED
+					/ (double) ADC_NUMS_SPEED;
+			double freq_shift;
+			if (index < ADC_NUMS_SPEED / 2) {
+				freq_shift = freq;
+			} else {
+				freq_shift = freq - 16000;
+			}
+			speed = freq / 158;
+			speed_shift = freq_shift / 158;
+			freqArr[j] = freq_shift;
+			medianArr[j] = speed_shift;
+			meanValue += speed_shift;
 		} else {
+			double spectrumAverage = 0;
+			for (int i = cutter; i < (ADC_NUMS_SPEED - cutter); i++) {
+				if ((double) spectrum[i] > cutAmplitude) {
+					cutAmplitude = (double) spectrum[i];
+					cutIndex = i;
+				}
+				spectrumAverage += spectrum[i]
+						/ (ADC_NUMS_SPEED - (2 * cutter));
+			}
+			if (cutAmplitude > (maxValue * factor)) {
+				index1 = cutIndex;
+			}
 
+			if (cutAmplitude > (factor2 * spectrumAverage)) {
+				index2 = cutIndex;
+			}
 			double freq = (double) index1 * SAMPLING_RATE_SPEED
 					/ (double) ADC_NUMS_SPEED;
 			double freq_shift;
@@ -144,8 +170,6 @@ float measure_speed(bool human_detection) {
 			freqArr[j] = freq_shift;
 			medianArr[j] = speed_shift;
 			meanValue += speed_shift;
-			//HAL_Delay(100);
-
 		}
 	}
 	bubbleSort(medianArr, FILTER_LENGTH);

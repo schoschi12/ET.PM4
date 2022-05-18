@@ -122,19 +122,36 @@ int main(void) {
 			init_speed();
 			MENU_draw_level_two();
 
+			bool gain_set = false;
+			bool human_set = true;
 			while (menu_level == 2) {
 				switch (MENU_get_transition()) {	// Handle user menu choice
 				case MENU_NONE:					// No transition => do nothing
 					//GPIO_set_gain();
-					measure_speed(false);
+					measure_speed(false, human_set);
 					//GPIO_reset_gain();
 					//HAL_Delay(50);
 					break;
 				case MENU_ZERO:
-					GPIO_set_gain();
+					if (gain_set){
+						gain_set = false;
+						GPIO_reset_gain();
+						set_menu_off();
+					}else{
+						gain_set = true;
+						GPIO_set_gain();
+						set_menu_on();
+					}
 					break;
 				case MENU_ONE:
-					GPIO_reset_gain();
+					if(human_set){
+						human_set = false;
+						set_menu_car();
+					}
+					else{
+						human_set = true;
+						set_menu_human();
+					}
 					break;
 				case MENU_TWO:
 					menu_level = 1;
