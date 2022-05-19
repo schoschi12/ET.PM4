@@ -195,10 +195,8 @@ float measure_speed(bool human_detection, bool human_set) {
 	//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*) text, LEFT_MODE);
 	snprintf(text, 15, "Speed:");
 	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*) text, LEFT_MODE);
-	snprintf(text, 15, "med%d: %.2fm/s", FILTER_LENGTH, median);
+	snprintf(text, 15, "%.2fm/s", FILTER_LENGTH, median);
 	BSP_LCD_DisplayStringAt(0, 50, (uint8_t*) text, LEFT_MODE);
-	snprintf(text, 15, "relAvg: %.2fm/s", speed2_shift);
-	BSP_LCD_DisplayStringAt(0, 70, (uint8_t*) text, LEFT_MODE);
 	//medianValues = 0;
 	return 0;	//median;
 }
